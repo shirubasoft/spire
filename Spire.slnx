@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/" />
+  <Folder Name="/src/cli/">
+    <Project Path="src/cli/Spire.Cli.csproj" />
+  </Folder>
   <Folder Name="/src/core/">
     <Project Path="src/core/Spire.csproj" />
   </Folder>
