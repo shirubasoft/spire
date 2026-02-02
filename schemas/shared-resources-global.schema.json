@@ -1,5 +1,5 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://spire.dev/schemas/shared-resources-global.schema.json",
+  "$id": "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/shared-resources-global.schema.json",
   "$ref": "shared-resources.schema.json#/$defs/globalConfig"
 }

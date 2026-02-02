@@ -13,41 +13,42 @@ Aspire has no built-in way to do this. You'd need to maintain separate AppHost c
 
 ## How It Works
 
-Spire uses a `.aspire-shared-resources.json` file as the source of truth for shared resource definitions. This file lives in your git repository and describes how each service can run (as a project or container).
+Spire extends Aspire's native `.aspire/settings.json` file with a `sharedResources` section that describes how each service can run (as a project or container). This file lives in the AppHost's `.aspire` directory and uses relative paths.
 
-A global configuration file (`~/.spire/resources.json`) tracks all resources across repositories. MSBuild targets discover `.aspire-shared-resources.json` files by walking up from the project directory to the git root, and a Roslyn source generator creates type-safe builders at compile time.
+A global configuration file (`~/.aspire/spire/aspire-shared-resources.json`) aggregates all resources across repositories with absolute paths. Repository-scoped overrides (created via CLI commands) can further customize resources per repo. MSBuild targets invoke the Spire CLI to import resources at build time, and a Roslyn source generator creates type-safe builders at compile time.
 
 ## Core Flows
 
 ### Generate (producer)
 
-Scan an existing repository for projects and containers, then produce a `.aspire-shared-resources.json` file describing them as shared resources.
+Scan an existing repository for projects and containers, then produce shared resource definitions in `.aspire/settings.json`.
 
 ```bash
 spire resource generate <path>
 ```
 
-This discovers `.csproj` files and container definitions, then writes (or updates) the `.aspire-shared-resources.json` file in the repository. The global config at `~/.spire/resources.json` is also updated to reflect the generated resources.
+This discovers `.csproj` files and container definitions, then writes (or updates) the `sharedResources` section in `.aspire/settings.json`. The global config at `~/.aspire/spire/aspire-shared-resources.json` is also updated with absolute paths.
 
 ### Import (consumer)
 
-Import shared resources from `.aspire-shared-resources.json` files found in the current git repository into the global config.
+Import shared resources from `.aspire/settings.json` files found in the current git repository into the global config.
 
 ```bash
 spire resource import
 ```
 
-This walks the git repository looking for `.aspire-shared-resources.json` files and merges any missing or updated entries into `~/.spire/resources.json`. The MSBuild targets call this automatically before the source generator runs, so consuming AppHosts stay in sync without manual steps.
+This walks the git repository looking for `.aspire/settings.json` files, converts relative paths to absolute, and merges entries into `~/.aspire/spire/aspire-shared-resources.json`. The MSBuild targets call this automatically before the source generator runs, so consuming AppHosts stay in sync without manual steps.
 
 ### At Build Time
 
-1. MSBuild targets find the git root and discover all `.aspire-shared-resources.json` files between the project directory and the root.
-2. The CLI is invoked to sync those files into the global config.
-3. The source generator reads the merged configuration and emits type-safe `AddSharedResources()` and `builder.AddResourceName()` methods.
+1. MSBuild targets invoke `spire resource import` to sync `.aspire/settings.json` files into the global config.
+2. `spire resource list --level repo --json` outputs the merged configuration as JSON.
+3. The source generator reads this JSON, matching the schema structure (`resources` map with `mode`, `containerMode`, `projectMode`), and emits type-safe `builder.Add{ResourceName}()` extension methods.
+4. A generated `AddSharedResourcesConfiguration()` method embeds the resolved JSON as an in-memory configuration source, so generated code reads values like `resources:{id}:mode` from `IConfiguration` at runtime.
 
 ## Resource Management
 
-All resource commands operate on **both** the `.aspire-shared-resources.json` file and the global config. The JSON file is the portable, version-controlled source of truth; the global config is the local runtime state. They are kept in sync:
+All resource commands operate on **both** `.aspire/settings.json` and the global config. The settings file is the portable, version-controlled source of truth; the global config is the local runtime state. Configuration is layered with increasing priority: global → repository overrides → environment variables (`ASPIRE_*`).
 
 | Command | JSON file | Global config |
 |---------|-----------|---------------|
@@ -62,8 +63,8 @@ All resource commands operate on **both** the `.aspire-shared-resources.json` fi
 
 | Command | Description |
 |---------|-------------|
-| `spire resource generate <path>` | Generate `.aspire-shared-resources.json` from existing projects/containers |
-| `spire resource import` | Import resources from `.aspire-shared-resources.json` in the current git repo |
+| `spire resource generate <path>` | Generate `.aspire/settings.json` from existing projects/containers |
+| `spire resource import` | Import resources from `.aspire/settings.json` in the current git repo |
 | `spire resource list` | Show all registered resources |
 | `spire resource info <id>` | Show detailed info for a resource |
 | `spire resource remove <id>` | Remove a resource from JSON and global config |
@@ -75,8 +76,9 @@ All resource commands operate on **both** the `.aspire-shared-resources.json` fi
 
 | File | Purpose |
 |------|---------|
-| `.aspire-shared-resources.json` | Per-repository resource definitions (version controlled) |
-| `~/.spire/.aspire-shared-resources.json` | Global config aggregating all resources across repos |
+| `.aspire/settings.json` | Per-repository resource definitions — relative paths (version controlled) |
+| `~/.aspire/spire/aspire-shared-resources.json` | Global config aggregating all resources — absolute paths |
+| `~/.aspire/spire/{repo-slug}/aspire-shared-resources.json` | Repository-scoped overrides — absolute paths (CLI only) |
 
 ## Requirements
 

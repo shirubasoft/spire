@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://spire.dev/schemas/shared-resources.schema.json",
+  "$id": "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/shared-resources.schema.json",
   "$defs": {
     "containerModeSettings": {
       "type": "object",
@@ -167,7 +167,7 @@
     },
     "globalConfig": {
       "type": "object",
-      "description": "Global shared resources configuration (~/.spire/shared-resources.json). All paths are absolute.",
+      "description": "Global shared resources configuration (~/.aspire/spire/aspire-shared-resources.json). All paths are absolute.",
       "properties": {
         "$schema": {
           "type": "string"
@@ -188,11 +188,8 @@
     },
     "repositoryConfig": {
       "type": "object",
-      "description": "Repository-scoped shared resources configuration (.spire/shared-resources.json). All paths are relative to the repository root.",
+      "description": "Repository-scoped shared resources configuration. All paths are relative to the repository root.",
       "properties": {
-        "$schema": {
-          "type": "string"
-        },
         "resources": {
           "type": "object",
           "propertyNames": {
@@ -213,6 +210,21 @@
       },
       "required": ["resources"],
       "additionalProperties": false
+    },
+    "aspireSettings": {
+      "type": "object",
+      "description": "Aspire AppHost settings (.aspire/settings.json) extended with shared resource definitions. Paths in sharedResources are relative to the repository root.",
+      "properties": {
+        "appHostPath": {
+          "type": "string",
+          "description": "The path to the AppHost project file."
+        },
+        "sharedResources": {
+          "$ref": "#/$defs/repositoryConfig"
+        }
+      },
+      "required": ["appHostPath"],
+      "additionalProperties": true
     }
   }
 }

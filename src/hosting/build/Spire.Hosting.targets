@@ -11,7 +11,7 @@
            Text="The 'spire' CLI tool is required but was not found on PATH. Install with: dotnet tool install -g Spire.Cli" />
   </Target>
 
-  <!-- Import .aspire-shared-resources.json files into the global config -->
+  <!-- Import shared resources from .aspire/settings.json into the global config -->
   <Target Name="_ImportSharedResources"
           BeforeTargets="_ForwardSharedResourcesToGenerator"
           Condition="'$(SkipSharedResourceResolution)' != 'true'">

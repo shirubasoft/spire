@@ -15,7 +15,7 @@ public sealed class ResourceImportCommand : Command
     /// <summary>
     /// The command description.
     /// </summary>
-    public const string CommandDescription = "Import shared resources from .aspire-shared-resources.json files in the current git repository";
+    public const string CommandDescription = "Import shared resources from .aspire/settings.json files in the current git repository";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceImportCommand"/> class.
