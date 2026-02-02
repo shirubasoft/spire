@@ -14,9 +14,4 @@ public sealed record RegisteredSharedResource
     /// The shared resource definition.
     /// </summary>
     public required SharedResource Resource { get; init; }
-
-    /// <summary>
-    /// User-specified overrides for this resource.
-    /// </summary>
-    public required ResourceOverrides Overrides { get; init; }
 }
