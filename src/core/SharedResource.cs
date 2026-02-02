@@ -6,11 +6,6 @@
 public record SharedResource
 {
     /// <summary>
-    /// The unique identifier for this resource.
-    /// </summary>
-    public required string Id { get; init; }
-
-    /// <summary>
     /// The default execution mode.
     /// </summary>
     public required Mode DefaultMode { get; init; }
