@@ -69,7 +69,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         // Builder class
-        sb.AppendLine($"public sealed class {safeName}ResourceBuilder : ResourceBuilderProxy, I{safeName}ResourceBuilder");
+        sb.AppendLine($"public sealed class {safeName}ResourceBuilder : SharedResourceBuilder, I{safeName}ResourceBuilder");
         sb.AppendLine("{");
         sb.AppendLine($"    public {safeName}ResourceBuilder(IResourceBuilder<IResource> inner, ResourceMode mode)");
         sb.AppendLine("        : base(inner, mode) { }");
