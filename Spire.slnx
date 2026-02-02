@@ -12,4 +12,17 @@
   <Folder Name="/src/source-generator/">
     <Project Path="src/source-generator/Spire.SourceGenerator.csproj" />
   </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/core/">
+    <Project Path="tests/core/Spire.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/cli/">
+    <Project Path="tests/cli/Spire.Cli.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/hosting/">
+    <Project Path="tests/hosting/Spire.Hosting.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/source-generator/">
+    <Project Path="tests/source-generator/Spire.SourceGenerator.Tests.csproj" />
+  </Folder>
 </Solution>
