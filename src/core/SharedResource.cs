@@ -6,9 +6,9 @@
 public record SharedResource
 {
     /// <summary>
-    /// The default execution mode.
+    /// The execution mode.
     /// </summary>
-    public required Mode DefaultMode { get; init; }
+    public required Mode Mode { get; init; }
 
     /// <summary>
     /// Container mode settings, if supported.

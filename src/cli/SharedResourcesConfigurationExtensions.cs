@@ -11,7 +11,7 @@ public static class SharedResourcesConfigurationExtensions
 
     /// <summary>
     /// Adds shared resource configuration with layered priority.
-    /// Order (lowest to highest): global &lt; overrides:global &lt; overrides:repo &lt; env.
+    /// Order (lowest to highest): global &lt; overrides:repo &lt; env.
     /// </summary>
     /// <param name="builder">The configuration builder.</param>
     /// <param name="repositorySlugs">Slugs identifying the Git repositories to load overrides for.</param>
@@ -29,13 +29,7 @@ public static class SharedResourcesConfigurationExtensions
             optional: true,
             reloadOnChange: false);
 
-        // Layer 2: global overrides
-        builder.AddJsonFile(
-            Path.Combine(globalDir, ConfigFileName),
-            optional: true,
-            reloadOnChange: false);
-
-        // Layer 3: repository-scoped overrides (each repo layered in order)
+        // Layer 2: repository-scoped overrides (each repo layered in order)
         foreach (var slug in repositorySlugs)
         {
             var repoDir = Path.Combine(globalDir, slug);
@@ -45,7 +39,7 @@ public static class SharedResourcesConfigurationExtensions
                 reloadOnChange: false);
         }
 
-        // Layer 4 (highest priority): environment variables
+        // Layer 3 (highest priority): environment variables
         builder.AddEnvironmentVariables("ASPIRE_");
 
         return builder;

@@ -62,7 +62,7 @@
     "resourceBase": {
       "type": "object",
       "properties": {
-        "defaultMode": {
+        "mode": {
           "type": "string",
           "enum": ["container", "project"],
           "description": "The default execution mode."
@@ -71,7 +71,7 @@
           "$ref": "#/$defs/gitRepositorySettings"
         }
       },
-      "required": ["defaultMode"]
+      "required": ["mode"]
     },
     "absolutePath": {
       "type": "string",
@@ -88,7 +88,7 @@
         { "$ref": "#/$defs/resourceBase" },
         {
           "properties": {
-            "defaultMode": true,
+            "mode": true,
             "gitRepository": true,
             "containerMode": {
               "allOf": [
@@ -120,7 +120,7 @@
         { "$ref": "#/$defs/resourceBase" },
         {
           "properties": {
-            "defaultMode": true,
+            "mode": true,
             "gitRepository": true,
             "containerMode": {
               "allOf": [

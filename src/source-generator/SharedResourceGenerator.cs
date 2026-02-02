@@ -27,18 +27,21 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
             if (string.IsNullOrWhiteSpace(json))
                 return;
 
-            var resources = JsonSerializer.Deserialize<ResourceEntry[]>(json);
-            if (resources is null)
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            var config = JsonSerializer.Deserialize<SharedResourcesConfig>(json, options);
+            if (config?.Resources is null)
                 return;
 
-            foreach (var resource in resources)
+            foreach (var kvp in config.Resources)
             {
-                if (string.IsNullOrEmpty(resource.Id))
+                var id = kvp.Key;
+                var resource = kvp.Value;
+
+                if (string.IsNullOrEmpty(id))
                     continue;
 
-                var name = resource.Name ?? resource.Id;
-                var safeName = ToSafeIdentifier(name);
-                var source = GenerateResourceSource(safeName, resource);
+                var safeName = ToSafeIdentifier(id);
+                var source = GenerateResourceSource(safeName, id, resource);
 
                 ctx.AddSource($"{safeName}.g.cs", SourceText.From(source, Encoding.UTF8));
             }
@@ -48,7 +51,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         });
     }
 
-    private static string GenerateResourceSource(string safeName, ResourceEntry resource)
+    private static string GenerateResourceSource(string safeName, string resourceId, ResourceEntry resource)
     {
         var sb = new StringBuilder();
 
@@ -56,7 +59,6 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("using Aspire.Hosting;");
         sb.AppendLine("using Aspire.Hosting.ApplicationModel;");
-        sb.AppendLine("using Aspire.Hosting;");
         sb.AppendLine();
 
         // Interface
@@ -99,8 +101,8 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("{");
         sb.AppendLine($"    public static I{safeName}ResourceBuilder Add{safeName}(this IDistributedApplicationBuilder builder)");
         sb.AppendLine("    {");
-        sb.AppendLine($"        var modeValue = builder.Configuration[\"Aspire:Resources:{resource.Id}:Mode\"];");
-        sb.AppendLine("        var mode = string.Equals(modeValue, \"Project\", System.StringComparison.OrdinalIgnoreCase)");
+        sb.AppendLine($"        var modeValue = builder.Configuration[\"resources:{resourceId}:mode\"];");
+        sb.AppendLine("        var mode = string.Equals(modeValue, \"project\", System.StringComparison.OrdinalIgnoreCase)");
         sb.AppendLine("            ? ResourceMode.Project");
         sb.AppendLine("            : ResourceMode.Container;");
         sb.AppendLine();
@@ -109,31 +111,25 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("        if (mode == ResourceMode.Project)");
         sb.AppendLine("        {");
 
-        if (!string.IsNullOrEmpty(resource.ProjectPath))
+        var projectPath = resource.ProjectMode?.ProjectDirectory;
+        if (!string.IsNullOrEmpty(projectPath))
         {
-            sb.AppendLine($"            inner = builder.AddProject<{safeName}ProjectMetadata>(\"{resource.Id}\");");
+            sb.AppendLine($"            inner = builder.AddProject<{safeName}ProjectMetadata>(\"{resourceId}\");");
         }
         else
         {
-            sb.AppendLine($"            var projectPath = builder.Configuration[\"Aspire:Resources:{resource.Id}:ProjectPath\"];");
-            sb.AppendLine($"            inner = builder.AddProject(\"{resource.Id}\", projectPath);");
+            sb.AppendLine($"            var projectPath = builder.Configuration[\"resources:{resourceId}:projectMode:projectDirectory\"];");
+            sb.AppendLine($"            inner = builder.AddProject(\"{resourceId}\", projectPath);");
         }
 
         sb.AppendLine("        }");
         sb.AppendLine("        else");
         sb.AppendLine("        {");
 
-        var image = !string.IsNullOrEmpty(resource.ContainerImage) ? resource.ContainerImage : resource.Id;
-        var tag = !string.IsNullOrEmpty(resource.ContainerTag) ? resource.ContainerTag : "latest";
-
-        if (!string.IsNullOrEmpty(resource.ImageRegistry))
-        {
-            sb.AppendLine($"            inner = builder.AddContainer(\"{resource.Id}\", \"{resource.ImageRegistry}/{image}\", \"{tag}\");");
-        }
-        else
-        {
-            sb.AppendLine($"            inner = builder.AddContainer(\"{resource.Id}\", \"{image}\", \"{tag}\");");
-        }
+        sb.AppendLine($"            var imageName = builder.Configuration[\"resources:{resourceId}:containerMode:imageName\"] ?? \"{resourceId}\";");
+        sb.AppendLine($"            var imageRegistry = builder.Configuration[\"resources:{resourceId}:containerMode:imageRegistry\"];");
+        sb.AppendLine("            var image = !string.IsNullOrEmpty(imageRegistry) ? $\"{imageRegistry}/{imageName}\" : imageName;");
+        sb.AppendLine($"            inner = builder.AddContainer(\"{resourceId}\", image);");
 
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -142,12 +138,12 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         // Project metadata class if project path is known at build time
-        if (!string.IsNullOrEmpty(resource.ProjectPath))
+        if (!string.IsNullOrEmpty(projectPath))
         {
             sb.AppendLine();
             sb.AppendLine($"public class {safeName}ProjectMetadata : IProjectMetadata");
             sb.AppendLine("{");
-            sb.AppendLine($"    public string ProjectPath => \"{resource.ProjectPath}\";");
+            sb.AppendLine($"    public string ProjectPath => \"{projectPath}\";");
             sb.AppendLine("}");
         }
 
@@ -209,16 +205,28 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
+    private sealed class SharedResourcesConfig
+    {
+        public Dictionary<string, ResourceEntry> Resources { get; set; }
+    }
+
     private sealed class ResourceEntry
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
         public string Mode { get; set; }
-        public string ProjectPath { get; set; }
-        public string ContainerImage { get; set; }
-        public string ContainerTag { get; set; }
-        public string BuildImageCommand { get; set; }
-        public string BuildImage { get; set; }
+        public ContainerModeEntry ContainerMode { get; set; }
+        public ProjectModeEntry ProjectMode { get; set; }
+    }
+
+    private sealed class ContainerModeEntry
+    {
+        public string ImageName { get; set; }
         public string ImageRegistry { get; set; }
+        public string BuildCommand { get; set; }
+        public string BuildWorkingDirectory { get; set; }
+    }
+
+    private sealed class ProjectModeEntry
+    {
+        public string ProjectDirectory { get; set; }
     }
 }
