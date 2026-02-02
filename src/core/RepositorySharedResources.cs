@@ -1,9 +1,10 @@
 namespace Spire;
 
 /// <summary>
-/// Root configuration model for a shared-resources.json file.
+/// Repository-scoped shared resources configuration.
+/// Contains resource definitions with relative paths and optional external repository imports.
 /// </summary>
-public sealed record SharedResourcesConfiguration
+public sealed record RepositorySharedResources
 {
     /// <summary>
     /// A map of resource ID to resource definition.
@@ -12,7 +13,6 @@ public sealed record SharedResourcesConfiguration
 
     /// <summary>
     /// External Git repositories whose shared resources are imported.
-    /// Only valid in repository-scoped configuration files.
     /// </summary>
     public List<ExternalResource>? ExternalResources { get; init; }
 }

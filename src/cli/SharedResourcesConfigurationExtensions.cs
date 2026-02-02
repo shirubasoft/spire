@@ -11,12 +11,12 @@ public static class SharedResourcesConfigurationExtensions
 
     /// <summary>
     /// Loads shared resource configuration with layered priority and binds it to
-    /// <see cref="SharedResourcesConfiguration"/>. All paths are guaranteed absolute
+    /// <see cref="GlobalSharedResources"/>. All paths are guaranteed absolute
     /// because the import step converts relative paths when writing to global config.
     /// Order (lowest to highest): global &lt; repository overrides &lt; env.
     /// </summary>
     /// <param name="repositorySlugs">Slugs identifying the Git repositories to load overrides for.</param>
-    public static SharedResourcesConfiguration GetSharedResources(
+    public static GlobalSharedResources GetSharedResources(
         IEnumerable<string> repositorySlugs)
     {
         var globalDir = Path.Combine(
@@ -47,7 +47,7 @@ public static class SharedResourcesConfigurationExtensions
 
         var configuration = builder.Build();
 
-        return configuration.Get<SharedResourcesConfiguration>()
-            ?? new SharedResourcesConfiguration { Resources = new Dictionary<string, SharedResource>() };
+        return configuration.Get<GlobalSharedResources>()
+            ?? new GlobalSharedResources { Resources = new Dictionary<string, SharedResource>() };
     }
 }
