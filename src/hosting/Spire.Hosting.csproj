@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Runtime types and MSBuild targets for Spire shared resource references.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\core\Spire.csproj" />
+    <ProjectReference Include="..\source-generator\Spire.SourceGenerator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Bundle the source generator DLL as an analyzer in the NuGet package -->
+  <Target Name="PackGeneratorAnalyzer" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_GeneratorFiles Include="..\source-generator\bin\$(Configuration)\netstandard2.0\Spire.SourceGenerator.dll" />
+      <_PackageFiles Include="@(_GeneratorFiles)" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Pack MSBuild build assets into the NuGet package -->
+  <ItemGroup>
+    <None Include="build/**" Pack="true" PackagePath="build/" />
+  </ItemGroup>
+
+</Project>

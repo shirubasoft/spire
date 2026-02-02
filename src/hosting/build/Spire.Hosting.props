@@ -1,0 +1,9 @@
+<Project>
+
+  <PropertyGroup>
+    <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
+    <ContainerRepository Condition="'$(ContainerRepository)' == ''">$(AssemblyName)</ContainerRepository>
+    <SkipSharedResourceResolution Condition="'$(SkipSharedResourceResolution)' == ''">false</SkipSharedResourceResolution>
+  </PropertyGroup>
+
+</Project>

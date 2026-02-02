@@ -23,5 +23,6 @@ public sealed class ResourceListCommand : Command
     public ResourceListCommand() : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(CommonOptions.Level);
+        Options.Add(CommonOptions.Json);
     }
 }

@@ -6,4 +6,9 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!-- Disable global analyzers for the source generator project (netstandard2.0 compatibility) -->
+  <ItemGroup Condition="'$(IsRoslynComponent)' == 'true'">
+    <GlobalPackageReference Remove="Microsoft.CodeAnalysis" />
+  </ItemGroup>
 </Project>

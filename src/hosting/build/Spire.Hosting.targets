@@ -1,0 +1,36 @@
+<Project>
+
+  <!-- Check that the spire CLI is available -->
+  <Target Name="_CheckSpireCliAvailability"
+          BeforeTargets="_ImportSharedResources"
+          Condition="'$(SkipSharedResourceResolution)' != 'true'">
+    <Exec Command="spire --version" ConsoleToMsBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="_SpireCliExitCode" />
+    </Exec>
+    <Error Condition="'$(_SpireCliExitCode)' != '0'"
+           Text="The 'spire' CLI tool is required but was not found on PATH. Install with: dotnet tool install -g Spire.Cli" />
+  </Target>
+
+  <!-- Import .aspire-shared-resources.json files into the global config -->
+  <Target Name="_ImportSharedResources"
+          BeforeTargets="_ForwardSharedResourcesToGenerator"
+          Condition="'$(SkipSharedResourceResolution)' != 'true'">
+    <Exec Command="spire resource import" />
+  </Target>
+
+  <!-- Query the CLI for resolved resources and forward to the source generator -->
+  <Target Name="_ForwardSharedResourcesToGenerator"
+          BeforeTargets="CoreCompile"
+          Condition="'$(SkipSharedResourceResolution)' != 'true'">
+    <PropertyGroup>
+      <_SharedResourceJsonPath>$(IntermediateOutputPath)SharedResources.g.json</_SharedResourceJsonPath>
+    </PropertyGroup>
+
+    <Exec Command="spire resource list --level repo --json &gt; &quot;$(_SharedResourceJsonPath)&quot;" />
+
+    <ItemGroup>
+      <AdditionalFiles Include="$(_SharedResourceJsonPath)" />
+    </ItemGroup>
+  </Target>
+
+</Project>

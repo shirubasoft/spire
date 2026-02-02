@@ -6,4 +6,10 @@
   <Folder Name="/src/core/">
     <Project Path="src/core/Spire.csproj" />
   </Folder>
+  <Folder Name="/src/hosting/">
+    <Project Path="src/hosting/Spire.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/src/source-generator/">
+    <Project Path="src/source-generator/Spire.SourceGenerator.csproj" />
+  </Folder>
 </Solution>

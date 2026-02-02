@@ -28,6 +28,15 @@ public static class CommonOptions
     };
 
     /// <summary>
+    /// Output as JSON.
+    /// </summary>
+    public static readonly Option<bool> Json = new(name: "--json")
+    {
+        Description = "Output as JSON",
+        Required = false
+    };
+
+    /// <summary>
     /// Automatic yes to prompts; runs non-interactively.
     /// </summary>
     public static readonly Option<bool> Yes = new(name: "--yes", "-y")
