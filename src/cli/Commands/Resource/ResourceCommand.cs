@@ -22,13 +22,11 @@ public sealed class ResourceCommand : Command
     /// </summary>
     public ResourceCommand() : base(name: CommandName, description: CommandDescription)
     {
-        Subcommands.Add(new ResourceAddCommand());
         Subcommands.Add(new ResourceListCommand());
-        Subcommands.Add(new ResourceRemoveCommand());
-        Subcommands.Add(new ResourceUpdateCommand());
-        Subcommands.Add(new ResourceShareCommand());
         Subcommands.Add(new ResourceInfoCommand());
         Subcommands.Add(new ResourceGenerateCommand());
+        Subcommands.Add(new ResourceImportCommand());
+        Subcommands.Add(new ResourceRemoveCommand());
         Subcommands.Add(new ResourceClearCommand());
     }
 }
