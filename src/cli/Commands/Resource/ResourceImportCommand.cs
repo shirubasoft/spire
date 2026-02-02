@@ -24,4 +24,9 @@ public sealed class ResourceImportCommand : Command
     {
         Options.Add(CommonOptions.Yes);
     }
+
+    private readonly record struct ImportSharedResourcesRequest
+    {
+        public required bool AutoCloneExternalResources { get; init; }
+    }
 }

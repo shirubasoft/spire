@@ -25,4 +25,16 @@ public sealed class ResourceInfoCommand : Command
         Options.Add(ResourceOptions.Id);
         Options.Add(CommonOptions.Level);
     }
+
+    private static async Task<SharedResource> GetSharedResource(GetSharedResourceRequest request, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    private readonly record struct GetSharedResourceRequest
+    {
+        public required string Id { get; init; }
+
+        public required Level Level { get; init; }
+    }
 }

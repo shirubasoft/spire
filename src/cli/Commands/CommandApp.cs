@@ -1,7 +1,7 @@
 using System;
 using System.CommandLine;
 
-namespace Spire.Cli.Commands;
+namespace Spire.Cli;
 
 /// <summary>
 /// Provides the top-level commands for the CLI application.

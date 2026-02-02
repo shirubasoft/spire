@@ -44,4 +44,13 @@ public static class CommonOptions
         Description = "Automatic yes to prompts; assume 'yes' as answer to all prompts and run non-interactively",
         Required = false
     };
+
+    /// <summary>
+    /// Force the operation to run.
+    /// </summary>
+    public static readonly Option<bool> Force = new(name: "--force", "-f")
+    {
+        Description = "Force the operation to run",
+        Required = false
+    };
 }

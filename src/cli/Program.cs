@@ -1,3 +1,3 @@
-﻿using Spire.Cli.Commands;
+﻿using Spire.Cli;
 
 return await SpireCli.RunAsync(args);

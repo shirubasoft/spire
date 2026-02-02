@@ -20,4 +20,8 @@
     <ProjectReference Include="../core/Spire.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services/Configuration/" />
+  </ItemGroup>
+
 </Project>
