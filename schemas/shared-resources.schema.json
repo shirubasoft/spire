@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://spire.dev/schemas/shared-resources.schema.json",
+  "$defs": {
+    "containerModeSettings": {
+      "type": "object",
+      "properties": {
+        "imageName": {
+          "type": "string",
+          "description": "The container image name.",
+          "pattern": "^[a-z0-9][a-z0-9._/-]*$"
+        },
+        "imageRegistry": {
+          "type": "string",
+          "description": "The container image registry.",
+          "pattern": "^[a-z0-9][a-z0-9._-]*(:[0-9]+)?(/[a-z0-9._-]+)*$"
+        },
+        "buildCommand": {
+          "type": "string",
+          "description": "The command used to build the container image.",
+          "minLength": 1
+        },
+        "buildWorkingDirectory": {
+          "type": "string",
+          "description": "The working directory for the build command.",
+          "minLength": 1
+        }
+      },
+      "required": ["imageName", "imageRegistry", "buildCommand", "buildWorkingDirectory"],
+      "additionalProperties": false
+    },
+    "projectModeSettings": {
+      "type": "object",
+      "properties": {
+        "projectDirectory": {
+          "type": "string",
+          "description": "The path to the project directory.",
+          "minLength": 1
+        }
+      },
+      "required": ["projectDirectory"],
+      "additionalProperties": false
+    },
+    "gitRepositorySettings": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The repository URL.",
+          "format": "uri"
+        },
+        "defaultBranch": {
+          "type": "string",
+          "description": "The default branch name.",
+          "default": "main",
+          "pattern": "^[^\\s]+$"
+        }
+      },
+      "required": ["url"],
+      "additionalProperties": false
+    },
+    "resourceBase": {
+      "type": "object",
+      "properties": {
+        "defaultMode": {
+          "type": "string",
+          "enum": ["container", "project"],
+          "description": "The default execution mode."
+        },
+        "gitRepository": {
+          "$ref": "#/$defs/gitRepositorySettings"
+        }
+      },
+      "required": ["defaultMode"]
+    },
+    "absolutePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(/|[A-Za-z]:[\\\\/])"
+    },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/|[A-Za-z]:[\\\\/])"
+    },
+    "globalResource": {
+      "allOf": [
+        { "$ref": "#/$defs/resourceBase" },
+        {
+          "properties": {
+            "defaultMode": true,
+            "gitRepository": true,
+            "containerMode": {
+              "allOf": [
+                { "$ref": "#/$defs/containerModeSettings" },
+                {
+                  "properties": {
+                    "buildWorkingDirectory": { "$ref": "#/$defs/absolutePath" }
+                  }
+                }
+              ]
+            },
+            "projectMode": {
+              "allOf": [
+                { "$ref": "#/$defs/projectModeSettings" },
+                {
+                  "properties": {
+                    "projectDirectory": { "$ref": "#/$defs/absolutePath" }
+                  }
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "repositoryResource": {
+      "allOf": [
+        { "$ref": "#/$defs/resourceBase" },
+        {
+          "properties": {
+            "defaultMode": true,
+            "gitRepository": true,
+            "containerMode": {
+              "allOf": [
+                { "$ref": "#/$defs/containerModeSettings" },
+                {
+                  "properties": {
+                    "buildWorkingDirectory": { "$ref": "#/$defs/relativePath" }
+                  }
+                }
+              ]
+            },
+            "projectMode": {
+              "allOf": [
+                { "$ref": "#/$defs/projectModeSettings" },
+                {
+                  "properties": {
+                    "projectDirectory": { "$ref": "#/$defs/relativePath" }
+                  }
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "externalResource": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The URL of the external Git repository.",
+          "format": "uri"
+        },
+        "branch": {
+          "type": "string",
+          "description": "The branch to use.",
+          "default": "main",
+          "pattern": "^[^\\s]+$"
+        }
+      },
+      "required": ["url"],
+      "additionalProperties": false
+    },
+    "globalConfig": {
+      "type": "object",
+      "description": "Global shared resources configuration (~/.spire/shared-resources.json). All paths are absolute.",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "resources": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/globalResource"
+          },
+          "description": "A map of resource ID to resource definition."
+        }
+      },
+      "required": ["resources"],
+      "additionalProperties": false
+    },
+    "repositoryConfig": {
+      "type": "object",
+      "description": "Repository-scoped shared resources configuration (.spire/shared-resources.json). All paths are relative to the repository root.",
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "resources": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z0-9][a-z0-9-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/repositoryResource"
+          },
+          "description": "A map of resource ID to resource definition."
+        },
+        "externalResources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/externalResource"
+          },
+          "description": "External Git repositories whose shared-resources.json files are imported."
+        }
+      },
+      "required": ["resources"],
+      "additionalProperties": false
+    }
+  }
+}
