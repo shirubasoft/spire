@@ -23,5 +23,6 @@ public sealed class ResourceRemoveCommand : Command
     public ResourceRemoveCommand() : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(CommonOptions.Yes);
+        Options.Add(CommonOptions.Level);
     }
 }

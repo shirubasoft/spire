@@ -22,5 +22,7 @@ public sealed class ResourceInfoCommand : Command
     /// </summary>
     public ResourceInfoCommand() : base(name: CommandName, description: CommandDescription)
     {
+        Options.Add(ResourceOptions.Id);
+        Options.Add(CommonOptions.Level);
     }
 }
