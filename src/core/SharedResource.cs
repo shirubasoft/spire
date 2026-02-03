@@ -13,17 +13,17 @@ public record SharedResource
     /// <summary>
     /// Container mode settings, if supported.
     /// </summary>
-    public virtual required ContainerModeSettings? ContainerMode { get; init; }
+    public virtual ContainerModeSettings? ContainerMode { get; init; }
 
     /// <summary>
     /// Project mode settings, if supported.
     /// </summary>
-    public virtual required ProjectModeSettings? ProjectMode { get; init; }
+    public virtual ProjectModeSettings? ProjectMode { get; init; }
 
     /// <summary>
     /// Git repository settings, if applicable.
     /// </summary>
-    public virtual required GitRepositorySettings? GitRepository { get; init; }
+    public virtual GitRepositorySettings? GitRepository { get; init; }
 
     /// <summary>
     /// Creates a new <see cref="SharedResource"/> with the specified mode.

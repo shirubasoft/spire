@@ -36,8 +36,10 @@ public sealed class RepositorySharedResourcesReader : IRepositorySharedResources
             return new RepositorySharedResources { Resources = [] };
         }
 
-        return JsonSerializer.Deserialize<RepositorySharedResources>(json, JsonOptions)
-            ?? new RepositorySharedResources { Resources = [] };
+        // Parse as AspireSettings (with sharedResources wrapper) per schema
+        var aspireSettings = JsonSerializer.Deserialize<AspireSettings>(json, JsonOptions);
+
+        return aspireSettings?.SharedResources ?? new RepositorySharedResources { Resources = [] };
     }
 
     /// <inheritdoc />
@@ -50,5 +52,21 @@ public sealed class RepositorySharedResourcesReader : IRepositorySharedResources
     public string GetSettingsFilePath(string repositoryPath)
     {
         return Path.Combine(repositoryPath, SettingsDirectory, SettingsFileName);
+    }
+
+    /// <summary>
+    /// Represents the .aspire/settings.json file structure per schema.
+    /// </summary>
+    private sealed class AspireSettings
+    {
+        /// <summary>
+        /// The path to the AppHost project file.
+        /// </summary>
+        public string? AppHostPath { get; init; }
+
+        /// <summary>
+        /// The shared resources configuration.
+        /// </summary>
+        public RepositorySharedResources? SharedResources { get; init; }
     }
 }
