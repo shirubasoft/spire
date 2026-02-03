@@ -1,7 +1,10 @@
 using System.CommandLine;
 
-using Spire.Cli.Services;
+using Spectre.Console;
+
+using Spire.Cli.Commands.Resource.Handlers;
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli;
 
@@ -26,18 +29,21 @@ public sealed class ResourceImportCommand : Command
     public ResourceImportCommand() : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(CommonOptions.Yes);
-    }
+        Options.Add(CommonOptions.Force);
 
-    private static async Task ImportAsync(
-        ImportSharedResourcesRequest request,
-        ISharedResourcesWriter writer,
-        IGitService gitService)
-    {
-    }
+        SetAction(async (parseResult, cancellationToken) =>
+        {
+            var yes = parseResult.GetValue(CommonOptions.Yes);
+            var force = parseResult.GetValue(CommonOptions.Force);
 
-    private readonly record struct ImportSharedResourcesRequest
-    {
-        public required string RepositoryPath { get; init; }
-        public required bool AutoCloneExternalResources { get; init; }
+            var console = AnsiConsole.Console;
+            var gitCliResolver = new GitCliResolver();
+            var gitService = new GitService(gitCliResolver);
+            var repositoryReader = new RepositorySharedResourcesReader();
+            var writer = new SharedResourcesWriter();
+
+            var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+            return await handler.ExecuteAsync(yes, force, cancellationToken);
+        });
     }
 }
