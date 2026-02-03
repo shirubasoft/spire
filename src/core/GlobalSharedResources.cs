@@ -15,4 +15,20 @@ public sealed record GlobalSharedResources
     /// A map of resource ID to resource definition.
     /// </summary>
     public required Dictionary<string, SharedResource> Resources { get; init; }
+
+    /// <summary>
+    /// Creates a new <see cref="GlobalSharedResources"/> with the specified resource updated.
+    /// </summary>
+    /// <param name="id">The resource ID to update.</param>
+    /// <param name="resource">The updated resource.</param>
+    /// <returns>A new instance with the updated resource.</returns>
+    public GlobalSharedResources UpdateResource(string id, SharedResource resource)
+    {
+        var newResources = new Dictionary<string, SharedResource>(Resources)
+        {
+            [id] = resource
+        };
+
+        return this with { Resources = newResources };
+    }
 }
