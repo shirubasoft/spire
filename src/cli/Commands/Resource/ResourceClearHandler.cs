@@ -1,6 +1,7 @@
 using Spectre.Console;
 using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli;
 
@@ -70,7 +71,7 @@ public sealed class ResourceClearHandler
                 {
                     var gitRepo = await _gitService.GetRepositoryAsync(currentDir, cancellationToken);
                     repoPath = gitRepo.RootPath;
-                    repoResources = _repoReader.Read(repoPath);
+                    repoResources = await _repoReader.ReadAsync(repoPath, cancellationToken);
                 }
             }
             catch
@@ -108,7 +109,7 @@ public sealed class ResourceClearHandler
 
             if (includeRepo && repoPath is not null)
             {
-                _console.MarkupLine($"  [grey]-[/] {_repoReader.GetSettingsPath(repoPath)}");
+                _console.MarkupLine($"  [grey]-[/] {_repoReader.GetSettingsFilePath(repoPath)}");
             }
 
             _console.WriteLine();

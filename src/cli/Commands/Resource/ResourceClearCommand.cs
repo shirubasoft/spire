@@ -2,6 +2,7 @@ using System.CommandLine;
 using Spectre.Console;
 using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli;
 

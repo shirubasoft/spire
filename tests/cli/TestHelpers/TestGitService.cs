@@ -1,4 +1,5 @@
 using Spire.Cli.Services;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests.TestHelpers;
 
@@ -67,5 +68,42 @@ public sealed class TestGitService : IGitService
         }
 
         return false;
+    }
+
+    /// <inheritdoc/>
+    public Task<string?> GetRepositoryRootAsync(string path, CancellationToken cancellationToken)
+    {
+        var fullPath = Path.GetFullPath(path);
+
+        // Walk up the directory tree to find the repository root
+        var current = fullPath;
+        while (current is not null)
+        {
+            if (_repositories.ContainsKey(current))
+            {
+                return Task.FromResult<string?>(current);
+            }
+            current = Path.GetDirectoryName(current);
+        }
+
+        return Task.FromResult<string?>(null);
+    }
+
+    /// <inheritdoc/>
+    public string GetParentDirectory(string repoRoot)
+    {
+        return Path.GetDirectoryName(repoRoot) ?? repoRoot;
+    }
+
+    /// <inheritdoc/>
+    public Task<string?> GetRemoteUrlAsync(string path, string remoteName = "origin", CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult<string?>("https://github.com/test/repo.git");
+    }
+
+    /// <inheritdoc/>
+    public Task<string> GetDefaultBranchAsync(string path, CancellationToken cancellationToken = default)
+    {
+        return Task.FromResult("main");
     }
 }

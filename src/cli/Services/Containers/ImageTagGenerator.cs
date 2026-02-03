@@ -1,3 +1,5 @@
+using Spire.Cli.Services.Git;
+
 namespace Spire.Cli.Services;
 
 /// <summary>

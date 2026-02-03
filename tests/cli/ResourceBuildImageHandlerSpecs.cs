@@ -5,6 +5,7 @@ using Spectre.Console.Testing;
 
 using Spire.Cli.Commands.Resource;
 using Spire.Cli.Services;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests;
 

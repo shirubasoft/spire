@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Spectre.Console.Testing;
 
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests.Modes;
 

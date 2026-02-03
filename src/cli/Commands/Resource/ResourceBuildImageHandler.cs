@@ -1,6 +1,7 @@
 using Spectre.Console;
 
 using Spire.Cli.Services;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Commands.Resource;
 

@@ -1,6 +1,7 @@
 using NSubstitute;
 
 using Spire.Cli.Services;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests;
 

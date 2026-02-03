@@ -4,6 +4,7 @@ using Spectre.Console.Testing;
 using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
 using Spire.Cli.Tests.TestHelpers;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests.Integration;
 
@@ -405,9 +406,9 @@ public sealed class ResourceClearIntegrationSpecs
     private IRepositorySharedResourcesReader CreateRepoReader()
     {
         var reader = Substitute.For<IRepositorySharedResourcesReader>();
-        reader.Read(Arg.Any<string>()).Returns(callInfo => ReadRepoConfig());
-        reader.Exists(Arg.Any<string>()).Returns(true);
-        reader.GetSettingsPath(Arg.Any<string>()).Returns(_repoSettingsPath);
+        reader.ReadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(callInfo => Task.FromResult(ReadRepoConfig()));
+        reader.SettingsFileExists(Arg.Any<string>()).Returns(true);
+        reader.GetSettingsFilePath(Arg.Any<string>()).Returns(_repoSettingsPath);
         return reader;
     }
 
