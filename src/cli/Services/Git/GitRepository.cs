@@ -6,6 +6,11 @@ namespace Spire.Cli.Services;
 public readonly record struct GitRepository
 {
     /// <summary>
+    /// The root path of the Git repository.
+    /// </summary>
+    public required string RootPath { get; init; }
+
+    /// <summary>
     /// The current branch of the Git repository.
     /// </summary>
     public required string CurrentBranch { get; init; }
