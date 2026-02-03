@@ -125,12 +125,15 @@ public sealed class ModesHandler
         // Format is "[[Mode]] id" (with escaped brackets)
         // Spectre.Console will render this as "[Mode] id"
         var closingBracket = choice.IndexOf("]]");
-        if (closingBracket < 0 || closingBracket + 3 >= choice.Length)
+
+        // Skip "]] " (2 chars for ]] plus 1 for space = 3 chars) to get the resource id
+        const int offsetAfterBrackets = 3;
+        if (closingBracket < 0 || closingBracket + offsetAfterBrackets >= choice.Length)
         {
             return null;
         }
 
-        return choice[(closingBracket + 3)..];
+        return choice[(closingBracket + offsetAfterBrackets)..].Trim();
     }
 
     /// <summary>

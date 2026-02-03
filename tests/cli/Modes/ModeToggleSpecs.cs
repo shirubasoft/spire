@@ -22,6 +22,15 @@ public class ModeToggleSpecs
     }
 
     [Test]
+    public async Task Toggle_InvalidMode_ThrowsArgumentOutOfRangeException()
+    {
+        var invalidMode = (Mode)999;
+
+        await Assert.That(() => ModesHandler.ToggleMode(invalidMode))
+            .Throws<ArgumentOutOfRangeException>();
+    }
+
+    [Test]
     public async Task Toggle_PreservesAllSettings()
     {
         var containerSettings = CreateContainerSettings();
