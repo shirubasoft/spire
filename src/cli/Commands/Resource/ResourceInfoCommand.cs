@@ -23,5 +23,13 @@ public sealed class ResourceInfoCommand : Command
     public ResourceInfoCommand() : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(ResourceOptions.Id);
+
+        SetAction(parseResult =>
+        {
+            var id = parseResult.GetValue(ResourceOptions.Id) ?? string.Empty;
+            var resources = SharedResourcesConfigurationExtensions.GetSharedResources();
+            var handler = new ResourceInfoHandler();
+            return handler.Execute(id, resources, Console.Out, Console.Error);
+        });
     }
 }

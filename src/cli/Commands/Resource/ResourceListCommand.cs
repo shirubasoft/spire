@@ -22,6 +22,11 @@ public sealed class ResourceListCommand : Command
     /// </summary>
     public ResourceListCommand() : base(name: CommandName, description: CommandDescription)
     {
-        Options.Add(CommonOptions.Json);
+        SetAction(parseResult =>
+        {
+            var resources = SharedResourcesConfigurationExtensions.GetSharedResources();
+            var handler = new ResourceListHandler();
+            return handler.Execute(resources, Console.Out);
+        });
     }
 }
