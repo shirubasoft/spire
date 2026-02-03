@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 using Spectre.Console;
 
 using Spire.Cli.Services.Analysis;
@@ -122,13 +124,31 @@ public sealed class ResourceGenerateHandler
 
     private string PromptForId(ProjectAnalysisResult? project, DockerfileAnalysisResult? dockerfile)
     {
-        var defaultId = project?.ProjectName.ToLowerInvariant()
+        var defaultId = SanitizeResourceId(
+            project?.ProjectName.ToLowerInvariant()
             ?? dockerfile?.SuggestedImageName
-            ?? "my-resource";
+            ?? "my-resource");
 
         return _console.Prompt(
             new TextPrompt<string>("Enter resource ID:")
                 .DefaultValue(defaultId));
+    }
+
+    /// <summary>
+    /// Sanitizes a resource ID or image name by replacing non-alphanumeric characters with dashes.
+    /// </summary>
+    /// <param name="value">The value to sanitize.</param>
+    /// <returns>A sanitized string containing only lowercase letters, numbers, and dashes.</returns>
+    internal static string SanitizeResourceId(string value)
+    {
+        // Replace any character that is not alphanumeric with a dash
+        var sanitized = Regex.Replace(value.ToLowerInvariant(), @"[^a-z0-9]", "-");
+
+        // Collapse multiple consecutive dashes into a single dash
+        sanitized = Regex.Replace(sanitized, @"-+", "-");
+
+        // Remove leading and trailing dashes
+        return sanitized.Trim('-');
     }
 
     private static (SharedResource global, SharedResource repo) BuildResources(
@@ -140,7 +160,8 @@ public sealed class ResourceGenerateHandler
         string? imageRegistryOverride)
     {
         var mode = project is not null ? Mode.Project : Mode.Container;
-        var imageName = imageNameOverride ?? project?.ProjectName.ToLowerInvariant() ?? dockerfile?.SuggestedImageName ?? resourceId;
+        var imageName = imageNameOverride
+            ?? SanitizeResourceId(project?.ProjectName.ToLowerInvariant() ?? dockerfile?.SuggestedImageName ?? resourceId);
         var imageRegistry = imageRegistryOverride ?? "docker.io";
         var imageTag = "latest";
 
