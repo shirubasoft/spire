@@ -17,17 +17,6 @@ public static class CommonOptions
     };
 
     /// <summary>
-    /// The level at which to apply the command (Repo or Global).
-    /// </summary>
-    public static readonly Option<Level> Level = new(name: "--level", "-l")
-    {
-        Required = false,
-        Arity = ArgumentArity.ExactlyOne,
-        DefaultValueFactory = _ => Cli.Level.Repo,
-        Description = "The level to apply the command at (Repo, Global)"
-    };
-
-    /// <summary>
     /// Output as JSON.
     /// </summary>
     public static readonly Option<bool> Json = new(name: "--json")

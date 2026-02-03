@@ -6,13 +6,13 @@ namespace Spire.Cli.Services.Configuration;
 public interface ISharedResourcesWriter
 {
     /// <summary>
-    /// Saves resources to the global config file. When <paramref name="repoPath"/> is provided,
-    /// saves to the repository-scoped override file instead (slug is derived from the repo's git remote).
+    /// Saves resources to the global config file at ~/.aspire/spire/aspire-shared-resources.json.
     /// </summary>
-    Task SaveGlobalAsync(GlobalSharedResources resources, string? repoPath = null, CancellationToken cancellationToken = default);
+    Task SaveGlobalAsync(GlobalSharedResources resources, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Saves repository shared resources to the .aspire/settings.json file at the given path.
+    /// These are meant to be imported into the global configuration.
     /// </summary>
     Task SaveRepositoryAsync(RepositorySharedResources resources, string repoPath, CancellationToken cancellationToken = default);
 }

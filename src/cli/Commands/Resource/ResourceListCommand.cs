@@ -22,17 +22,6 @@ public sealed class ResourceListCommand : Command
     /// </summary>
     public ResourceListCommand() : base(name: CommandName, description: CommandDescription)
     {
-        Options.Add(CommonOptions.Level);
         Options.Add(CommonOptions.Json);
-    }
-
-    private static async Task<GlobalSharedResources> GetGlobalSharedResources(GetGlobalSharedResourcesRequest request, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException();
-    }
-
-    private readonly record struct GetGlobalSharedResourcesRequest
-    {
-        public required Level Level { get; init; }
     }
 }

@@ -15,7 +15,7 @@ public sealed class ResourceClearCommand : Command
     /// <summary>
     /// The command description.
     /// </summary>
-    public const string CommandDescription = "Clear all shared resources from the current Git repository or globally";
+    public const string CommandDescription = "Clear all shared resources";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceClearCommand"/> class.
@@ -23,7 +23,6 @@ public sealed class ResourceClearCommand : Command
     public ResourceClearCommand() : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(CommonOptions.Yes);
-        Options.Add(CommonOptions.Level);
         Options.Add(ResourceOptions.Ids);
     }
 }
