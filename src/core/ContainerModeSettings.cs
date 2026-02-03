@@ -16,6 +16,11 @@ public sealed record ContainerModeSettings
     public required string ImageRegistry { get; init; }
 
     /// <summary>
+    /// The container image tag.
+    /// </summary>
+    public required string ImageTag { get; init; }
+
+    /// <summary>
     /// The command used to build the container image.
     /// </summary>
     public required string BuildCommand { get; init; }
