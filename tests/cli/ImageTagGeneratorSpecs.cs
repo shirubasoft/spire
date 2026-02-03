@@ -17,6 +17,7 @@ public class ThreeTagsGenerationSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = false
@@ -41,6 +42,7 @@ public class CommitTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = false
@@ -60,6 +62,7 @@ public class CommitTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc12",
             IsDirty = false
@@ -78,6 +81,7 @@ public class CommitTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = true
@@ -102,6 +106,7 @@ public class BranchTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "feature/auth",
             LatestCommitHash = "abc1234def5678",
             IsDirty = false
@@ -121,6 +126,7 @@ public class BranchTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = true
@@ -145,6 +151,7 @@ public class LatestTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = false
@@ -163,6 +170,7 @@ public class LatestTagSpecs
         var generator = new ImageTagGenerator(sanitizer);
         var repository = new GitRepository
         {
+            RootPath = "/test/repo",
             CurrentBranch = "main",
             LatestCommitHash = "abc1234def5678",
             IsDirty = false

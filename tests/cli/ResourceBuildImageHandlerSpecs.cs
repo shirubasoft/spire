@@ -45,7 +45,8 @@ public class ValidResourceBuildSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -232,7 +233,8 @@ public class ExistingCommitTagSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -300,7 +302,8 @@ public class ForceRebuildSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -368,7 +371,8 @@ public class ExistingBranchTagSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -435,7 +439,8 @@ public class BuildFailureSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -518,7 +523,8 @@ public class MultipleResourceBuildSpecs
         gitService.GetRepositoryAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });

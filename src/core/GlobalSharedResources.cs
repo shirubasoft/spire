@@ -19,6 +19,18 @@ public sealed record GlobalSharedResources
     public required Dictionary<string, SharedResource> Resources { get; init; }
 
     /// <summary>
+    /// Gets the number of resources in this instance.
+    /// </summary>
+    public int Count => Resources.Count;
+
+    /// <summary>
+    /// Returns true if a resource with the given ID exists.
+    /// </summary>
+    /// <param name="id">The resource identifier.</param>
+    /// <returns>True if the resource exists; otherwise, false.</returns>
+    public bool ContainsResource(string id) => Resources.ContainsKey(id);
+
+    /// <summary>
     /// Creates a new <see cref="GlobalSharedResources"/> with the specified resource updated.
     /// </summary>
     /// <param name="id">The resource ID to update.</param>
@@ -32,6 +44,56 @@ public sealed record GlobalSharedResources
         };
 
         return this with { Resources = newResources };
+    }
+
+    /// <summary>
+    /// Returns a new instance without the specified resource.
+    /// </summary>
+    /// <param name="id">The resource identifier to remove.</param>
+    /// <returns>A new instance without the specified resource.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when the resource does not exist.</exception>
+    public GlobalSharedResources RemoveResource(string id)
+    {
+        if (!Resources.ContainsKey(id))
+        {
+            throw new KeyNotFoundException($"Resource '{id}' not found.");
+        }
+
+        var newResources = new Dictionary<string, SharedResource>(Resources);
+        newResources.Remove(id);
+        return new GlobalSharedResources { Resources = newResources };
+    }
+
+    /// <summary>
+    /// Returns a new instance with the specified resources cleared.
+    /// If no IDs are provided, clears all resources.
+    /// </summary>
+    /// <param name="ids">The resource identifiers to clear, or null to clear all.</param>
+    /// <returns>A new instance with the specified resources cleared.</returns>
+    /// <exception cref="KeyNotFoundException">Thrown when any specified resource does not exist.</exception>
+    public GlobalSharedResources ClearResources(IEnumerable<string>? ids = null)
+    {
+        if (ids is null)
+        {
+            return Empty;
+        }
+
+        var idsToRemove = ids.ToList();
+        foreach (var id in idsToRemove)
+        {
+            if (!Resources.ContainsKey(id))
+            {
+                throw new KeyNotFoundException($"Resource '{id}' not found.");
+            }
+        }
+
+        var newResources = new Dictionary<string, SharedResource>(Resources);
+        foreach (var id in idsToRemove)
+        {
+            newResources.Remove(id);
+        }
+
+        return new GlobalSharedResources { Resources = newResources };
     }
 
     /// <summary>
