@@ -1,4 +1,7 @@
+using System.Collections;
 using System.CommandLine;
+
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Commands.Resource;
 

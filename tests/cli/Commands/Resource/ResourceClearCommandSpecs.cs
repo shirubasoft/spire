@@ -2,6 +2,7 @@ using NSubstitute;
 using Spectre.Console.Testing;
 using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests.Commands.Resource;
 
@@ -229,7 +230,7 @@ public sealed class ResourceClearWithIncludeRepoSpecs
                 LatestCommitHash = "abc123",
                 IsDirty = false
             });
-        repoReader.Read("/repo").Returns(repoResources);
+        repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
         var handler = new ResourceClearHandler(
             console,

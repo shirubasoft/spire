@@ -8,48 +8,64 @@ namespace Spire.Cli.Services.Configuration;
 /// </summary>
 public sealed class SharedResourcesWriter : ISharedResourcesWriter
 {
-    private const string ConfigFileName = "aspire-shared-resources.json";
-    private const string RepositoryConfigFileName = "settings.json";
-    private const string RepositoryConfigFolder = ".aspire";
+    private const string GlobalConfigDirectory = ".aspire/spire";
+    private const string GlobalConfigFileName = "aspire-shared-resources.json";
+    private const string RepositorySettingsDirectory = ".aspire";
+    private const string RepositorySettingsFileName = "settings.json";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
     /// <inheritdoc />
     public async Task SaveGlobalAsync(GlobalSharedResources resources, CancellationToken cancellationToken = default)
     {
-        var globalConfigPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".aspire",
-            "spire",
-            ConfigFileName);
+        var configPath = GetGlobalConfigPath();
+        var directory = Path.GetDirectoryName(configPath)!;
 
-        var directory = Path.GetDirectoryName(globalConfigPath);
-        if (directory is not null && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        var json = JsonSerializer.Serialize(resources, JsonOptions);
-        await File.WriteAllTextAsync(globalConfigPath, json, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public async Task SaveRepositoryAsync(RepositorySharedResources resources, string repoPath, CancellationToken cancellationToken = default)
-    {
-        var configPath = Path.Combine(repoPath, RepositoryConfigFolder, RepositoryConfigFileName);
-
-        var directory = Path.GetDirectoryName(configPath);
-        if (directory is not null && !Directory.Exists(directory))
+        if (!Directory.Exists(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
         var json = JsonSerializer.Serialize(resources, JsonOptions);
         await File.WriteAllTextAsync(configPath, json, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task SaveRepositoryAsync(RepositorySharedResources resources, string repoPath, CancellationToken cancellationToken = default)
+    {
+        var settingsPath = GetRepositorySettingsPath(repoPath);
+        var directory = Path.GetDirectoryName(settingsPath)!;
+
+        if (!Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        var json = JsonSerializer.Serialize(resources, JsonOptions);
+        await File.WriteAllTextAsync(settingsPath, json, cancellationToken);
+    }
+
+    /// <summary>
+    /// Gets the path to the global configuration file.
+    /// </summary>
+    public static string GetGlobalConfigPath()
+    {
+        var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return Path.Combine(userProfile, GlobalConfigDirectory, GlobalConfigFileName);
+    }
+
+    /// <summary>
+    /// Gets the path to the repository settings file.
+    /// </summary>
+    /// <param name="repoPath">The repository root path.</param>
+    public static string GetRepositorySettingsPath(string repoPath)
+    {
+        return Path.Combine(repoPath, RepositorySettingsDirectory, RepositorySettingsFileName);
     }
 }

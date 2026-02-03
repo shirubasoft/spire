@@ -14,27 +14,28 @@ public sealed class TestRepositorySharedResourcesReader : IRepositorySharedResou
     };
 
     /// <inheritdoc/>
-    public RepositorySharedResources? Read(string repoPath)
+    public Task<RepositorySharedResources?> ReadAsync(string repositoryPath, CancellationToken cancellationToken = default)
     {
-        var path = GetSettingsPath(repoPath);
+        var path = GetSettingsFilePath(repositoryPath);
         if (!File.Exists(path))
         {
-            return null;
+            return Task.FromResult<RepositorySharedResources?>(null);
         }
 
         var json = File.ReadAllText(path);
-        return JsonSerializer.Deserialize<RepositorySharedResources>(json, SerializerOptions);
+        var result = JsonSerializer.Deserialize<RepositorySharedResources>(json, SerializerOptions);
+        return Task.FromResult(result);
     }
 
     /// <inheritdoc/>
-    public bool Exists(string repoPath)
+    public bool SettingsFileExists(string repositoryPath)
     {
-        return File.Exists(GetSettingsPath(repoPath));
+        return File.Exists(GetSettingsFilePath(repositoryPath));
     }
 
     /// <inheritdoc/>
-    public string GetSettingsPath(string repoPath)
+    public string GetSettingsFilePath(string repositoryPath)
     {
-        return Path.Combine(repoPath, ".aspire", "settings.json");
+        return Path.Combine(repositoryPath, ".aspire", "settings.json");
     }
 }

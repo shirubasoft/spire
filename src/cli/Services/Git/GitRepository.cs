@@ -1,4 +1,4 @@
-namespace Spire.Cli.Services;
+namespace Spire.Cli.Services.Git;
 
 /// <summary>
 /// Represents a Git repository with its current state.
@@ -24,4 +24,9 @@ public readonly record struct GitRepository
     /// Indicates whether the Git repository has uncommitted changes.
     /// </summary>
     public required bool IsDirty { get; init; }
+
+    /// <summary>
+    /// The remote URL of the repository (origin).
+    /// </summary>
+    public string? RemoteUrl { get; init; }
 }

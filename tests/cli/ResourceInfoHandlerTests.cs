@@ -1,6 +1,7 @@
 using System.Text.Json;
 
 using Spire.Cli;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests;
 
