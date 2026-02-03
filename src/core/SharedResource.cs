@@ -24,4 +24,11 @@ public record SharedResource
     /// Git repository settings, if applicable.
     /// </summary>
     public virtual required GitRepositorySettings? GitRepository { get; init; }
+
+    /// <summary>
+    /// Creates a new <see cref="SharedResource"/> with the specified mode.
+    /// </summary>
+    /// <param name="mode">The new execution mode.</param>
+    /// <returns>A new instance with the updated mode.</returns>
+    public SharedResource WithMode(Mode mode) => this with { Mode = mode };
 }
