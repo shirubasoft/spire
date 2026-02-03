@@ -166,7 +166,29 @@ public sealed class ResourceImportHandler
 
         // Determine clone location
         var repoName = GetRepoNameFromUrl(external.Url);
+
+        // Validate repo name to prevent path traversal attacks
+        if (string.IsNullOrWhiteSpace(repoName) ||
+            repoName is "." or ".." ||
+            repoName.Contains('/') ||
+            repoName.Contains('\\') ||
+            repoName.Contains(Path.DirectorySeparatorChar) ||
+            repoName.Contains(Path.AltDirectorySeparatorChar))
+        {
+            _console.MarkupLine($"  [red]Error: Invalid repository URL - potentially malicious path detected in {external.Url}[/]");
+            return;
+        }
+
         var clonePath = Path.Combine(cloneParentDir, repoName);
+
+        // Verify the resolved path stays within the intended directory
+        var fullClonePath = Path.GetFullPath(clonePath);
+        var fullParentDir = Path.GetFullPath(cloneParentDir);
+        if (!fullClonePath.StartsWith(fullParentDir + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+        {
+            _console.MarkupLine($"  [red]Error: Invalid repository URL - path traversal detected in {external.Url}[/]");
+            return;
+        }
 
         // Check if already cloned
         if (_gitService.IsRepositoryCloned(clonePath))
