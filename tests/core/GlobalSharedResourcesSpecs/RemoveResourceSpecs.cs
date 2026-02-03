@@ -1,4 +1,4 @@
-namespace Spire.Tests.GlobalSharedResources;
+namespace Spire.Tests.GlobalSharedResourcesSpecs;
 
 /// <summary>
 /// Tests for GlobalSharedResources.RemoveResource method.

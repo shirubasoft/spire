@@ -1,4 +1,4 @@
-namespace Spire.Tests.RepositorySharedResources;
+namespace Spire.Tests.RepositorySharedResourcesSpecs;
 
 /// <summary>
 /// Tests for RepositorySharedResources.RemoveResource method.

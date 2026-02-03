@@ -18,6 +18,7 @@ public sealed record GlobalSharedResources
     /// </summary>
     public required Dictionary<string, SharedResource> Resources { get; init; }
 
+    /// <summary>
     /// Gets the number of resources in this instance.
     /// </summary>
     public int Count => Resources.Count;

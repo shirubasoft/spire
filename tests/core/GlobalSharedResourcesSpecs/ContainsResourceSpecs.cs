@@ -1,7 +1,7 @@
-namespace Spire.Tests.RepositorySharedResources;
+namespace Spire.Tests.GlobalSharedResourcesSpecs;
 
 /// <summary>
-/// Tests for RepositorySharedResources.ContainsResource method.
+/// Tests for GlobalSharedResources.ContainsResource method.
 /// </summary>
 public sealed class ContainsResourceSpecs
 {
@@ -9,7 +9,7 @@ public sealed class ContainsResourceSpecs
     public async Task ContainsResource_WhenExists_ReturnsTrue()
     {
         // Arrange
-        var resources = new Spire.RepositorySharedResources
+        var resources = new Spire.GlobalSharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
@@ -28,7 +28,7 @@ public sealed class ContainsResourceSpecs
     public async Task ContainsResource_WhenNotExists_ReturnsFalse()
     {
         // Arrange
-        var resources = new Spire.RepositorySharedResources
+        var resources = new Spire.GlobalSharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
@@ -47,7 +47,7 @@ public sealed class ContainsResourceSpecs
     public async Task ContainsResource_OnEmptyResources_ReturnsFalse()
     {
         // Arrange
-        var resources = Spire.RepositorySharedResources.Empty;
+        var resources = Spire.GlobalSharedResources.Empty;
 
         // Act
         var result = resources.ContainsResource("any");

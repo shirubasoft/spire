@@ -47,7 +47,8 @@ public class DotnetProjectBuildIntegrationSpecs
         gitService.GetRepositoryAsync("/home/user/projects/my-api", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "feature/add-auth",
+                RootPath = "/test/repo",
+            CurrentBranch = "feature/add-auth",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -113,7 +114,8 @@ public class DockerfileBuildIntegrationSpecs
         gitService.GetRepositoryAsync("/home/user/projects/postgres-custom", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "def5678abc1234",
                 IsDirty = false
             });
@@ -179,7 +181,8 @@ public class ImageExistsSkipIntegrationSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -243,7 +246,8 @@ public class ForceRebuildIntegrationSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -307,7 +311,8 @@ public class AllTagsAppliedIntegrationSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "feature/auth",
+                RootPath = "/test/repo",
+            CurrentBranch = "feature/auth",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -378,7 +383,8 @@ public class DirtyRepositoryIntegrationSpecs
         gitService.GetRepositoryAsync("/app", Arg.Any<CancellationToken>())
             .Returns(new GitRepository
             {
-                CurrentBranch = "main",
+                RootPath = "/test/repo",
+            CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = true
             });

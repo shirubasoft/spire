@@ -1,21 +1,20 @@
-namespace Spire.Tests.GlobalSharedResources;
+namespace Spire.Tests.RepositorySharedResourcesSpecs;
 
 /// <summary>
-/// Tests for GlobalSharedResources.ClearResources method.
+/// Tests for RepositorySharedResources.ClearResources method.
 /// </summary>
 public sealed class ClearResourcesSpecs
 {
     [Test]
-    public async Task ClearResources_WithoutIds_ReturnsEmptyInstance()
+    public async Task ClearResources_WithoutIds_ClearsAllResources()
     {
         // Arrange
-        var resources = new Spire.GlobalSharedResources
+        var resources = new Spire.RepositorySharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
                 ["postgres"] = CreateResource(),
-                ["redis"] = CreateResource(),
-                ["mongo"] = CreateResource()
+                ["redis"] = CreateResource()
             }
         };
 
@@ -24,14 +23,13 @@ public sealed class ClearResourcesSpecs
 
         // Assert
         await Assert.That(result.Resources).Count().IsEqualTo(0);
-        await Assert.That(result).IsEqualTo(Spire.GlobalSharedResources.Empty);
     }
 
     [Test]
-    public async Task ClearResources_WithIds_ReturnsWithoutSpecified()
+    public async Task ClearResources_WithIds_RemovesOnlySpecified()
     {
         // Arrange
-        var resources = new Spire.GlobalSharedResources
+        var resources = new Spire.RepositorySharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
@@ -47,37 +45,38 @@ public sealed class ClearResourcesSpecs
         // Assert
         await Assert.That(result.Resources).Count().IsEqualTo(1);
         await Assert.That(result.Resources).ContainsKey("mongo");
-        await Assert.That(result.Resources).DoesNotContainKey("postgres");
-        await Assert.That(result.Resources).DoesNotContainKey("redis");
     }
 
     [Test]
-    public async Task ClearResources_PreservesUnspecifiedResources()
+    public async Task ClearResources_PreservesExternalResources()
     {
         // Arrange
-        var mongoResource = CreateResource();
-        var resources = new Spire.GlobalSharedResources
+        var externalResources = new List<ExternalResource>
+        {
+            new() { Url = "https://github.com/example/repo", Branch = "main" }
+        };
+
+        var resources = new Spire.RepositorySharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
-                ["postgres"] = CreateResource(),
-                ["redis"] = CreateResource(),
-                ["mongo"] = mongoResource
-            }
+                ["postgres"] = CreateResource()
+            },
+            ExternalResources = externalResources
         };
 
         // Act
-        var result = resources.ClearResources(["postgres", "redis"]);
+        var result = resources.ClearResources();
 
         // Assert
-        await Assert.That(result.Resources["mongo"]).IsEqualTo(mongoResource);
+        await Assert.That(result.ExternalResources).IsEquivalentTo(externalResources);
     }
 
     [Test]
-    public async Task ClearResources_WithInvalidId_ThrowsKeyNotFoundException()
+    public async Task ClearResources_WithNonexistentId_IgnoresIt()
     {
         // Arrange
-        var resources = new Spire.GlobalSharedResources
+        var resources = new Spire.RepositorySharedResources
         {
             Resources = new Dictionary<string, SharedResource>
             {
@@ -85,10 +84,11 @@ public sealed class ClearResourcesSpecs
             }
         };
 
-        // Act & Assert
-        await Assert.That(() => resources.ClearResources(["nonexistent"]))
-            .Throws<KeyNotFoundException>()
-            .WithMessage("Resource 'nonexistent' not found.");
+        // Act - should not throw
+        var result = resources.ClearResources(["nonexistent"]);
+
+        // Assert
+        await Assert.That(result.Resources).ContainsKey("postgres");
     }
 
     private static SharedResource CreateResource() => new()
