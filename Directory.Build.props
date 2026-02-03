@@ -7,6 +7,22 @@
     <GenerateDocumentationFile Condition="'$(IsTestProject)' != 'true'">true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <!-- NuGet package metadata -->
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true'">
+    <Authors>Shirubasoft</Authors>
+    <Company>Shirubasoft</Company>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/shirubasoft/spire</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/shirubasoft/spire</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageTags>aspire;dotnet;shared-resources;microservices</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsTestProject)' != 'true' AND Exists('$(MSBuildThisFileDirectory)README.md')">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+
   <!-- Disable global analyzers for the source generator project (netstandard2.0 compatibility) -->
   <ItemGroup Condition="'$(IsRoslynComponent)' == 'true'">
     <GlobalPackageReference Remove="Microsoft.CodeAnalysis" />
