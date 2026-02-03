@@ -1,5 +1,8 @@
 using System.CommandLine;
 
+using Spire.Cli.Services;
+using Spire.Cli.Services.Configuration;
+
 namespace Spire.Cli;
 
 /// <summary>
@@ -25,8 +28,18 @@ public sealed class ResourceImportCommand : Command
         Options.Add(CommonOptions.Yes);
     }
 
+    private static async Task ImportAsync(
+        ImportSharedResourcesRequest request,
+        IGlobalSharedResourcesService globalServices,
+        IRepositorySharedResourcesService repoServices,
+        IGitService gitService)
+    {
+
+    }
+
     private readonly record struct ImportSharedResourcesRequest
     {
+        public required string RepositoryPath { get; init; }
         public required bool AutoCloneExternalResources { get; init; }
     }
 }
