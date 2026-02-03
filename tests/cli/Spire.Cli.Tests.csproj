@@ -9,6 +9,8 @@
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="Spectre.Console.Testing" />
     <PackageReference Include="TUnit" />
+    <PackageReference Include="Spectre.Console.Testing" />
+    <PackageReference Include="NSubstitute" />
   </ItemGroup>
 
   <ItemGroup>
