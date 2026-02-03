@@ -27,7 +27,7 @@ public static class SharedResourcesConfigurationExtensions
 
         var configuration = builder.Build();
 
-        return configuration.Get<GlobalSharedResources>()
-            ?? GlobalSharedResources.Empty;
+        var result = configuration.Get<GlobalSharedResources>();
+        return result?.Resources is null ? GlobalSharedResources.Empty : result;
     }
 }
