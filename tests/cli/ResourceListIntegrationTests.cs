@@ -1,4 +1,5 @@
 using System.CommandLine;
+
 using Spire.Cli.Tests.TestHelpers;
 
 namespace Spire.Cli.Tests;

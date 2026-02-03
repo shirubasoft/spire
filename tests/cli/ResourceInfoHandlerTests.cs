@@ -1,4 +1,5 @@
 using System.Text.Json;
+
 using Spire.Cli;
 
 namespace Spire.Cli.Tests;
