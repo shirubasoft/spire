@@ -65,6 +65,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         // Interface
         sb.AppendLine($"public interface I{safeName}ResourceBuilder");
         sb.AppendLine("{");
+        sb.AppendLine("    IResourceBuilder<IResource> Inner { get; }");
         sb.AppendLine($"    I{safeName}ResourceBuilder ConfigureContainer(Action<IResourceBuilder<IResource>> configure);");
         sb.AppendLine($"    I{safeName}ResourceBuilder ConfigureProject(Action<IResourceBuilder<IResource>> configure);");
         sb.AppendLine($"    I{safeName}ResourceBuilder Configure<T>(Action<IResourceBuilder<T>> configure) where T : IResource;");
@@ -168,8 +169,15 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("{");
         sb.AppendLine("    // lang=json");
         sb.AppendLine("    private const string SharedResourcesJson = \"\"\"");
-        sb.Append("        ");
-        sb.AppendLine(json.Replace("\r", ""));
+
+        // Indent each line of the JSON for raw string literal compatibility
+        var jsonLines = json.Replace("\r", "").Split('\n');
+        foreach (var line in jsonLines)
+        {
+            sb.Append("        ");
+            sb.AppendLine(line);
+        }
+
         sb.AppendLine("        \"\"\";");
         sb.AppendLine();
         sb.AppendLine("    /// <summary>");
