@@ -14,5 +14,5 @@ public sealed record RepositorySharedResources
     /// <summary>
     /// External Git repositories whose shared resources are imported.
     /// </summary>
-    public List<ExternalResource>? ExternalResources { get; init; }
+    public List<ExternalResource> ExternalResources { get; init; } = [];
 }

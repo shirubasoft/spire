@@ -30,11 +30,9 @@ public sealed class ResourceImportCommand : Command
 
     private static async Task ImportAsync(
         ImportSharedResourcesRequest request,
-        IGlobalSharedResourcesService globalServices,
-        IRepositorySharedResourcesService repoServices,
+        ISharedResourcesWriter writer,
         IGitService gitService)
     {
-
     }
 
     private readonly record struct ImportSharedResourcesRequest

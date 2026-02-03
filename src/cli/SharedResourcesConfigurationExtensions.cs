@@ -13,14 +13,14 @@ public static class SharedResourcesConfigurationExtensions
     /// Loads shared resource configuration with layered priority and binds it to
     /// <see cref="GlobalSharedResources"/>. All paths are guaranteed absolute
     /// because the import step converts relative paths when writing to global config.
-    /// When <paramref name="level"/> is <see cref="Level.Repo"/>, repository overrides
-    /// take priority over global config. When <see cref="Level.Global"/>, global config
-    /// takes priority over repository overrides.
+    /// When <paramref name="level"/> is <see cref="Level.Repo"/>, the repository override
+    /// takes priority over global config. When <see cref="Level.Global"/>, global config
+    /// takes priority over the repository override.
     /// </summary>
-    /// <param name="repositorySlugs">Slugs identifying the Git repositories to load overrides for.</param>
+    /// <param name="repositorySlug">Slug identifying the Git repository to load overrides for, or null if not in a repository.</param>
     /// <param name="level">The priority level determining which layer wins.</param>
     public static GlobalSharedResources GetSharedResources(
-        IEnumerable<string> repositorySlugs,
+        string? repositorySlug = null,
         Level level = Level.Repo)
     {
         var globalDir = Path.Combine(
@@ -30,16 +30,20 @@ public static class SharedResourcesConfigurationExtensions
 
         var builder = new ConfigurationBuilder();
 
-        if (level == Level.Repo)
+        if (repositorySlug is null)
         {
-            // Global first (lowest priority), then repo overrides on top
             AddGlobalLayer(builder, globalDir);
-            AddRepoLayers(builder, globalDir, repositorySlugs);
+        }
+        else if (level == Level.Repo)
+        {
+            // Global first (lowest priority), then repo override on top
+            AddGlobalLayer(builder, globalDir);
+            AddRepoLayer(builder, globalDir, repositorySlug);
         }
         else
         {
             // Repo first (lowest priority), then global on top
-            AddRepoLayers(builder, globalDir, repositorySlugs);
+            AddRepoLayer(builder, globalDir, repositorySlug);
             AddGlobalLayer(builder, globalDir);
         }
 
@@ -57,18 +61,15 @@ public static class SharedResourcesConfigurationExtensions
             reloadOnChange: false);
     }
 
-    private static void AddRepoLayers(
+    private static void AddRepoLayer(
         IConfigurationBuilder builder,
         string globalDir,
-        IEnumerable<string> repositorySlugs)
+        string repositorySlug)
     {
-        foreach (var slug in repositorySlugs)
-        {
-            var repoDir = Path.Combine(globalDir, slug);
-            builder.AddJsonFile(
-                Path.Combine(repoDir, ConfigFileName),
-                optional: true,
-                reloadOnChange: false);
-        }
+        var repoDir = Path.Combine(globalDir, repositorySlug);
+        builder.AddJsonFile(
+            Path.Combine(repoDir, ConfigFileName),
+            optional: true,
+            reloadOnChange: false);
     }
 }
