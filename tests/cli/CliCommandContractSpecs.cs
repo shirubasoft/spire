@@ -1,5 +1,7 @@
-using System.Diagnostics;
 using System.Text.Json;
+
+using CliWrap;
+using CliWrap.Buffered;
 
 namespace Spire.Cli.Tests;
 
@@ -13,33 +15,33 @@ public class CliCommandContractSpecs
     public async Task ResourceListCommand_Exists()
     {
         // Act
-        var (exitCode, _, _) = await RunSpireCommandAsync("resource list --help");
+        var result = await RunSpireCommandAsync("resource", "list --help");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
+        await Assert.That(result.ExitCode).IsEqualTo(0);
     }
 
     [Test]
     public async Task ResourceListCommand_ProducesValidJson()
     {
         // Act
-        var (exitCode, stdout, _) = await RunSpireCommandAsync("resource list");
+        var result = await RunSpireCommandAsync("resource", "list");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
-        await Assert.That(() => JsonDocument.Parse(stdout)).ThrowsNothing();
+        await Assert.That(result.ExitCode).IsEqualTo(0);
+        await Assert.That(() => JsonDocument.Parse(result.StandardOutput)).ThrowsNothing();
     }
 
     [Test]
     public async Task ResourceListCommand_OutputHasResourcesProperty()
     {
         // Act
-        var (exitCode, stdout, _) = await RunSpireCommandAsync("resource list");
+        var result = await RunSpireCommandAsync("resource", "list");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
+        await Assert.That(result.ExitCode).IsEqualTo(0);
 
-        using var doc = JsonDocument.Parse(stdout);
+        using var doc = JsonDocument.Parse(result.StandardOutput);
         await Assert.That(doc.RootElement.TryGetProperty("resources", out _)).IsTrue();
     }
 
@@ -47,54 +49,37 @@ public class CliCommandContractSpecs
     public async Task ResourceInfoCommand_Exists()
     {
         // Act
-        var (exitCode, _, _) = await RunSpireCommandAsync("resource info --help");
+        var result = await RunSpireCommandAsync("resource", "info --help");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
+        await Assert.That(result.ExitCode).IsEqualTo(0);
     }
 
     [Test]
     public async Task ModesCommand_Exists()
     {
         // Act
-        var (exitCode, _, _) = await RunSpireCommandAsync("modes --help");
+        var result = await RunSpireCommandAsync("modes", "--help");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
+        await Assert.That(result.ExitCode).IsEqualTo(0);
     }
 
     [Test]
     public async Task OverrideCommand_Exists()
     {
         // Act
-        var (exitCode, _, _) = await RunSpireCommandAsync("override --help");
+        var result = await RunSpireCommandAsync("override", "--help");
 
         // Assert
-        await Assert.That(exitCode).IsEqualTo(0);
+        await Assert.That(result.ExitCode).IsEqualTo(0);
     }
 
-    private static async Task<(int exitCode, string stdout, string stderr)> RunSpireCommandAsync(string arguments)
+    private static async Task<BufferedCommandResult> RunSpireCommandAsync(string command, string arguments)
     {
-        using var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "spire",
-                Arguments = arguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            }
-        };
-
-        process.Start();
-
-        var stdout = await process.StandardOutput.ReadToEndAsync();
-        var stderr = await process.StandardError.ReadToEndAsync();
-
-        await process.WaitForExitAsync();
-
-        return (process.ExitCode, stdout, stderr);
+        return await CliWrap.Cli.Wrap("spire")
+            .WithArguments($"{command} {arguments}")
+            .WithValidation(CommandResultValidation.None)
+            .ExecuteBufferedAsync();
     }
 }
