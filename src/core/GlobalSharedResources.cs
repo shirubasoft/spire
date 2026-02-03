@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace Spire;
 
 /// <summary>
@@ -30,5 +32,26 @@ public sealed record GlobalSharedResources
         };
 
         return this with { Resources = newResources };
+    }
+
+    /// <summary>
+    /// Attempts to get a resource by its ID.
+    /// </summary>
+    /// <param name="id">The resource ID to look up.</param>
+    /// <param name="resource">The resource if found; otherwise, null.</param>
+    /// <returns>True if the resource was found; otherwise, false.</returns>
+    public bool TryGetResource(string id, [NotNullWhen(true)] out SharedResource? resource)
+    {
+        return Resources.TryGetValue(id, out resource);
+    }
+
+    /// <summary>
+    /// Gets a resource by its ID, or null if not found.
+    /// </summary>
+    /// <param name="id">The resource ID to look up.</param>
+    /// <returns>The resource if found; otherwise, null.</returns>
+    public SharedResource? GetResource(string id)
+    {
+        return Resources.GetValueOrDefault(id);
     }
 }
