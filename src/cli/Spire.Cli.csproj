@@ -6,6 +6,9 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>spire</ToolCommandName>
+    <PackageId>spire.cli</PackageId>
   </PropertyGroup>
 
   <ItemGroup>
