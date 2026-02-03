@@ -28,6 +28,7 @@ public class WhenConfigFileDoesNotExistSpecs
     {
         var result = SharedResourcesConfigurationExtensions.GetSharedResources();
 
+        await Assert.That(result.Resources).IsNotNull();
         await Assert.That(result.Resources).IsEmpty();
     }
 }
@@ -61,6 +62,7 @@ public class WhenConfigFileIsEmptySpecs
     {
         var result = SharedResourcesConfigurationExtensions.GetSharedResources();
 
+        await Assert.That(result.Resources).IsNotNull();
         await Assert.That(result.Resources).IsEmpty();
     }
 }
