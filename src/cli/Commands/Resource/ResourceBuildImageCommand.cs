@@ -1,8 +1,4 @@
-using System;
-using System.Collections;
 using System.CommandLine;
-
-using Spire.Cli.Services;
 
 namespace Spire.Cli.Commands.Resource;
 
@@ -24,39 +20,18 @@ public sealed class ResourceBuildImageCommand : Command
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceBuildImageCommand"/> class.
     /// </summary>
-    public ResourceBuildImageCommand() : base(CommandName, CommandDescription)
+    /// <param name="handler">The handler for the command.</param>
+    public ResourceBuildImageCommand(ResourceBuildImageHandler handler)
+        : base(CommandName, CommandDescription)
     {
         Options.Add(ResourceOptions.Ids);
         Options.Add(CommonOptions.Force);
-    }
 
-    private static ImageTags GetImageTags(GitRepository repository)
-    {
-        string suffix = repository.IsDirty ? "-dirty" : string.Empty;
-
-        return new ImageTags
+        this.SetAction(async (parseResult, cancellationToken) =>
         {
-            BranchTag = repository.CurrentBranch.ToLowerInvariant().Replace('/', '-') + suffix,
-            CommitTag = repository.LatestCommitHash[..7] + suffix,
-        };
-    }
-
-    private readonly record struct ImageTags : IEnumerable<string>
-    {
-        public required string BranchTag { get; init; }
-
-        public required string CommitTag { get; init; }
-
-        public IEnumerator<string> GetEnumerator()
-        {
-            yield return BranchTag;
-            yield return CommitTag;
-            yield return "latest";
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+            var ids = parseResult.GetValue(ResourceOptions.Ids) ?? [];
+            var force = parseResult.GetValue(CommonOptions.Force);
+            return await handler.ExecuteAsync(ids, force, cancellationToken);
+        });
     }
 }

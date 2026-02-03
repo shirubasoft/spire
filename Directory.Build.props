@@ -7,6 +7,8 @@
     <!-- Auto-detect test projects by path -->
     <IsTestProject Condition="$(MSBuildProjectDirectory.Contains('tests'))">true</IsTestProject>
     <GenerateDocumentationFile Condition="'$(IsTestProject)' != 'true'">true</GenerateDocumentationFile>
+    <!-- Suppress CS1591 (missing XML comment) for test projects -->
+    <NoWarn Condition="'$(IsTestProject)' == 'true'">$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <!-- NuGet package metadata -->
