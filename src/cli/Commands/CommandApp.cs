@@ -1,6 +1,8 @@
 using System;
 using System.CommandLine;
 
+using Spire.Cli.Commands.Build;
+
 namespace Spire.Cli;
 
 /// <summary>
@@ -15,6 +17,7 @@ public static class SpireCli
     {
         RootCommand rootCommand = new("Spire CLI");
 
+        rootCommand.Subcommands.Add(new BuildCommand());
         rootCommand.Subcommands.Add(new ModesCommand());
         rootCommand.Subcommands.Add(new ResourceCommand());
         rootCommand.Subcommands.Add(new OverrideCommand());

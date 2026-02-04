@@ -3,11 +3,12 @@ using NSubstitute.ExceptionExtensions;
 
 using Spectre.Console.Testing;
 
-using Spire.Cli.Commands.Resource;
+using Spire.Cli.Commands.Build;
 using Spire.Cli.Services;
+using Spire.Cli.Services.Configuration;
 using Spire.Cli.Services.Git;
 
-namespace Spire.Cli.Tests;
+namespace Spire.Cli.Tests.Commands.Build;
 
 /// <summary>
 /// Tests for successful image build scenarios.
@@ -21,6 +22,7 @@ public class ValidResourceBuildSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -47,7 +49,7 @@ public class ValidResourceBuildSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -62,14 +64,15 @@ public class ValidResourceBuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await containerService.Received(1).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
@@ -88,17 +91,19 @@ public class ResourceNotFoundSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = GlobalSharedResources.Empty;
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["unknown-id"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["unknown-id"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(1);
         await Assert.That(console.Output).Contains("Resource not found");
@@ -117,6 +122,7 @@ public class NoContainerSettingsSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -135,14 +141,15 @@ public class NoContainerSettingsSpecs
             }
         };
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(1);
         await Assert.That(console.Output).Contains("does not have container mode settings");
@@ -161,6 +168,7 @@ public class NoBuildCommandSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -183,14 +191,15 @@ public class NoBuildCommandSpecs
             }
         };
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(1);
         await Assert.That(console.Output).Contains("does not have a build command");
@@ -209,6 +218,7 @@ public class ExistingCommitTagSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -235,7 +245,7 @@ public class ExistingCommitTagSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -251,14 +261,15 @@ public class ExistingCommitTagSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await Assert.That(console.Output).Contains("skipping");
@@ -278,6 +289,7 @@ public class ForceRebuildSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -304,7 +316,7 @@ public class ForceRebuildSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -320,14 +332,15 @@ public class ForceRebuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: true, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: true, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await Assert.That(console.Output).Contains("--force");
@@ -347,6 +360,7 @@ public class ExistingBranchTagSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -373,7 +387,7 @@ public class ExistingBranchTagSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -389,14 +403,15 @@ public class ExistingBranchTagSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await containerService.Received(1).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
@@ -415,6 +430,7 @@ public class BuildFailureSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -441,7 +457,7 @@ public class BuildFailureSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -459,14 +475,15 @@ public class BuildFailureSpecs
         containerService.BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Build failed"));
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-service"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(1);
         await Assert.That(console.Output).Contains("Build failed");
@@ -485,6 +502,7 @@ public class MultipleResourceBuildSpecs
         var gitService = Substitute.For<IGitService>();
         var containerService = Substitute.For<IContainerImageService>();
         var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -525,7 +543,7 @@ public class MultipleResourceBuildSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def",
                 IsDirty = false
             });
@@ -540,16 +558,306 @@ public class MultipleResourceBuildSpecs
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["service-a", "service-b"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["service-a", "service-b"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await containerService.Received(2).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
+    }
+}
+
+/// <summary>
+/// Tests for auto-resolving resources from repository settings.
+/// </summary>
+public class BuildAllFromRepoSpecs
+{
+    [Test]
+    public async Task Execute_WithNoIdsInRepo_BuildsRepoResources()
+    {
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var containerService = Substitute.For<IContainerImageService>();
+        var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
+
+        var resources = new GlobalSharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["svc-a"] = new SharedResource
+                {
+                    Mode = Mode.Container,
+                    ContainerMode = new ContainerModeSettings
+                    {
+                        ImageName = "svc-a",
+                        ImageRegistry = "docker.io",
+                        ImageTag = "latest",
+                        BuildCommand = "dotnet publish",
+                        BuildWorkingDirectory = "/app-a"
+                    },
+                    ProjectMode = null,
+                    GitRepository = null
+                },
+                ["svc-b"] = new SharedResource
+                {
+                    Mode = Mode.Container,
+                    ContainerMode = new ContainerModeSettings
+                    {
+                        ImageName = "svc-b",
+                        ImageRegistry = "docker.io",
+                        ImageTag = "latest",
+                        BuildCommand = "dotnet publish",
+                        BuildWorkingDirectory = "/app-b"
+                    },
+                    ProjectMode = null,
+                    GitRepository = null
+                }
+            }
+        };
+
+        var repoResources = new RepositorySharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["svc-a"] = new SharedResource { Mode = Mode.Container },
+                ["svc-b"] = new SharedResource { Mode = Mode.Container }
+            }
+        };
+
+        gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns("/test/repo");
+
+        repoReader.ReadAsync("/test/repo", Arg.Any<CancellationToken>())
+            .Returns(repoResources);
+
+        tagGenerator.Generate(Arg.Any<GitRepository>())
+            .Returns(new ImageTags
+            {
+                CommitTag = "abc1234",
+                BranchTag = "main"
+            });
+
+        containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var handler = new BuildHandler(
+            console,
+            gitService,
+            containerService,
+            tagGenerator,
+            repoReader,
+            () => resources);
+
+        var result = await handler.ExecuteAsync(null, force: false, global: false, CancellationToken.None);
+
+        await Assert.That(result).IsEqualTo(0);
+        await Assert.That(console.Output).Contains("repository");
+        await containerService.Received(2).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
+    }
+}
+
+/// <summary>
+/// Tests for auto-resolving resources from global config with --global flag.
+/// </summary>
+public class BuildAllFromGlobalSpecs
+{
+    [Test]
+    public async Task Execute_WithGlobalFlag_BuildsGlobalResources()
+    {
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var containerService = Substitute.For<IContainerImageService>();
+        var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
+
+        var resources = new GlobalSharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["svc-a"] = new SharedResource
+                {
+                    Mode = Mode.Container,
+                    ContainerMode = new ContainerModeSettings
+                    {
+                        ImageName = "svc-a",
+                        ImageRegistry = "docker.io",
+                        ImageTag = "latest",
+                        BuildCommand = "dotnet publish",
+                        BuildWorkingDirectory = "/app-a"
+                    },
+                    ProjectMode = null,
+                    GitRepository = null
+                },
+                ["svc-b"] = new SharedResource
+                {
+                    Mode = Mode.Container,
+                    ContainerMode = new ContainerModeSettings
+                    {
+                        ImageName = "svc-b",
+                        ImageRegistry = "docker.io",
+                        ImageTag = "latest",
+                        BuildCommand = "dotnet publish",
+                        BuildWorkingDirectory = "/app-b"
+                    },
+                    ProjectMode = null,
+                    GitRepository = null
+                }
+            }
+        };
+
+        gitService.GetRepositoryAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new GitRepository
+            {
+                RootPath = "/test/repo",
+                CurrentBranch = "main",
+                LatestCommitHash = "abc1234def",
+                IsDirty = false
+            });
+
+        tagGenerator.Generate(Arg.Any<GitRepository>())
+            .Returns(new ImageTags
+            {
+                CommitTag = "abc1234",
+                BranchTag = "main"
+            });
+
+        containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var handler = new BuildHandler(
+            console,
+            gitService,
+            containerService,
+            tagGenerator,
+            repoReader,
+            () => resources);
+
+        var result = await handler.ExecuteAsync(null, force: false, global: true, CancellationToken.None);
+
+        await Assert.That(result).IsEqualTo(0);
+        await Assert.That(console.Output).Contains("global");
+        await containerService.Received(2).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
+    }
+}
+
+/// <summary>
+/// Tests for not being in a repository without --global flag.
+/// </summary>
+public class BuildNotInRepoWithoutGlobalSpecs
+{
+    [Test]
+    public async Task Execute_WhenNotInRepoAndNoGlobal_PrintsMessage()
+    {
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var containerService = Substitute.For<IContainerImageService>();
+        var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
+
+        var resources = GlobalSharedResources.Empty;
+
+        gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((string?)null);
+
+        var handler = new BuildHandler(
+            console,
+            gitService,
+            containerService,
+            tagGenerator,
+            repoReader,
+            () => resources);
+
+        var result = await handler.ExecuteAsync(null, force: false, global: false, CancellationToken.None);
+
+        await Assert.That(result).IsEqualTo(0);
+        await Assert.That(console.Output).Contains("Not in a repository");
+        await containerService.DidNotReceive().BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
+    }
+}
+
+/// <summary>
+/// Tests that auto-resolve with --global skips resources without ContainerMode.
+/// </summary>
+public class BuildAllSkipsNonBuildableSpecs
+{
+    [Test]
+    public async Task Execute_WithGlobal_SkipsResourcesWithoutContainerMode()
+    {
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var containerService = Substitute.For<IContainerImageService>();
+        var tagGenerator = Substitute.For<IImageTagGenerator>();
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
+
+        var resources = new GlobalSharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["svc-a"] = new SharedResource
+                {
+                    Mode = Mode.Container,
+                    ContainerMode = new ContainerModeSettings
+                    {
+                        ImageName = "svc-a",
+                        ImageRegistry = "docker.io",
+                        ImageTag = "latest",
+                        BuildCommand = "dotnet publish",
+                        BuildWorkingDirectory = "/app-a"
+                    },
+                    ProjectMode = null,
+                    GitRepository = null
+                },
+                ["svc-b"] = new SharedResource
+                {
+                    Mode = Mode.Project,
+                    ContainerMode = null,
+                    ProjectMode = new ProjectModeSettings
+                    {
+                        ProjectDirectory = "/app-b"
+                    },
+                    GitRepository = null
+                }
+            }
+        };
+
+        gitService.GetRepositoryAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new GitRepository
+            {
+                RootPath = "/test/repo",
+                CurrentBranch = "main",
+                LatestCommitHash = "abc1234def",
+                IsDirty = false
+            });
+
+        tagGenerator.Generate(Arg.Any<GitRepository>())
+            .Returns(new ImageTags
+            {
+                CommitTag = "abc1234",
+                BranchTag = "main"
+            });
+
+        containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(false);
+
+        var handler = new BuildHandler(
+            console,
+            gitService,
+            containerService,
+            tagGenerator,
+            repoReader,
+            () => resources);
+
+        var result = await handler.ExecuteAsync(null, force: false, global: true, CancellationToken.None);
+
+        await Assert.That(result).IsEqualTo(0);
+        // Only svc-a should be built (svc-b has no ContainerMode)
+        await containerService.Received(1).BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>());
     }
 }
