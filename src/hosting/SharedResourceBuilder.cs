@@ -28,11 +28,11 @@ public abstract class SharedResourceBuilder
     /// <summary>
     /// Configures the resource only when running in container mode.
     /// </summary>
-    public SharedResourceBuilder ConfigureContainer(Action<IResourceBuilder<IResource>> configure)
+    public SharedResourceBuilder ConfigureContainer(Action<IResourceBuilder<ContainerResource>> configure)
     {
         if (_mode == ResourceMode.Container)
         {
-            configure(_inner);
+            configure((IResourceBuilder<ContainerResource>)_inner);
         }
 
         return this;
@@ -41,11 +41,11 @@ public abstract class SharedResourceBuilder
     /// <summary>
     /// Configures the resource only when running in project mode.
     /// </summary>
-    public SharedResourceBuilder ConfigureProject(Action<IResourceBuilder<IResource>> configure)
+    public SharedResourceBuilder ConfigureProject(Action<IResourceBuilder<ProjectResource>> configure)
     {
         if (_mode == ResourceMode.Project)
         {
-            configure(_inner);
+            configure((IResourceBuilder<ProjectResource>)_inner);
         }
 
         return this;

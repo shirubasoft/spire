@@ -59,9 +59,48 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(resourceSource).IsNotNull();
 
         var sourceText = resourceSource!.SourceText.ToString();
-        await Assert.That(sourceText).Contains("ConfigureContainer(");
-        await Assert.That(sourceText).Contains("ConfigureProject(");
+        await Assert.That(sourceText).Contains("ConfigureContainer(Action<IResourceBuilder<ContainerResource>>");
+        await Assert.That(sourceText).Contains("ConfigureProject(Action<IResourceBuilder<ProjectResource>>");
         await Assert.That(sourceText).Contains("Configure<T>(");
+    }
+
+    [Test]
+    public async Task GeneratedBuilder_ImplementsResourceBuilderInterfaces()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container"
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+
+        // Builder should implement IResourceBuilder<X> for each common interface
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithEnvironment>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithArgs>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithEndpoints>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithWaitSupport>");
+
+        // Should have explicit Resource property implementations
+        await Assert.That(sourceText).Contains("IResourceWithEnvironment IResourceBuilder<IResourceWithEnvironment>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithArgs IResourceBuilder<IResourceWithArgs>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithEndpoints IResourceBuilder<IResourceWithEndpoints>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithWaitSupport IResourceBuilder<IResourceWithWaitSupport>.Resource");
+
+        // Should have public ApplicationBuilder property
+        await Assert.That(sourceText).Contains("public IDistributedApplicationBuilder ApplicationBuilder");
     }
 
     [Test]
