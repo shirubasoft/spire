@@ -327,6 +327,172 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(sourceText).Contains("projectMode:projectPath");
     }
 
+    [Test]
+    public async Task ContainerMode_UsesWithImageRegistry()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container",
+                        "containerMode": {
+                            "imageName": "my-service",
+                            "imageRegistry": "docker.io"
+                        }
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("WithImageRegistry(imageRegistry)");
+    }
+
+    [Test]
+    public async Task ContainerMode_UsesWithImageTag()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container",
+                        "containerMode": {
+                            "imageName": "my-service",
+                            "imageTag": "latest"
+                        }
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("WithImageTag(imageTag)");
+    }
+
+    [Test]
+    public async Task ContainerMode_DoesNotManuallyPrependRegistry()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container",
+                        "containerMode": {
+                            "imageName": "my-service",
+                            "imageRegistry": "docker.io"
+                        }
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).DoesNotContain("{imageRegistry}/{imageName}");
+    }
+
+    [Test]
+    public async Task ContainerMode_GeneratesImageSyncExecutable()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container"
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("AddExecutable(\"my-service-image-sync\", \"spire\"");
+    }
+
+    [Test]
+    public async Task ContainerMode_ImageSyncWaitsForCompletion()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container"
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("WithParentRelationship(sync)");
+        await Assert.That(sourceText).Contains("WaitForCompletion(sync)");
+    }
+
+    [Test]
+    public async Task ContainerMode_ImageSyncReadsWorkingDirectoryFromConfig()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "container",
+                        "containerMode": {
+                            "buildWorkingDirectory": "./src/MyService"
+                        }
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("containerMode:buildWorkingDirectory");
+    }
+
     private static ImmutableArray<GeneratedSourceResult> RunGenerator(string json)
     {
         var generator = new SharedResourceGenerator();

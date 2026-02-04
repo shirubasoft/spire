@@ -101,9 +101,21 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
 
         sb.AppendLine($"            var imageName = builder.Configuration[\"resources:{resourceId}:containerMode:imageName\"] ?? \"{resourceId}\";");
+        sb.AppendLine($"            var containerBuilder = builder.AddContainer(\"{resourceId}\", imageName);");
+        sb.AppendLine();
         sb.AppendLine($"            var imageRegistry = builder.Configuration[\"resources:{resourceId}:containerMode:imageRegistry\"];");
-        sb.AppendLine("            var image = !string.IsNullOrEmpty(imageRegistry) ? $\"{imageRegistry}/{imageName}\" : imageName;");
-        sb.AppendLine($"            inner = builder.AddContainer(\"{resourceId}\", image);");
+        sb.AppendLine("            if (!string.IsNullOrEmpty(imageRegistry))");
+        sb.AppendLine("                containerBuilder = containerBuilder.WithImageRegistry(imageRegistry);");
+        sb.AppendLine();
+        sb.AppendLine($"            var imageTag = builder.Configuration[\"resources:{resourceId}:containerMode:imageTag\"];");
+        sb.AppendLine("            if (!string.IsNullOrEmpty(imageTag))");
+        sb.AppendLine("                containerBuilder = containerBuilder.WithImageTag(imageTag);");
+        sb.AppendLine();
+        sb.AppendLine($"            var buildWorkingDirectory = builder.Configuration[\"resources:{resourceId}:containerMode:buildWorkingDirectory\"] ?? \".\";");
+        sb.AppendLine($"            var sync = builder.AddExecutable(\"{resourceId}-image-sync\", \"spire\", buildWorkingDirectory, \"build\", \"--ids\", \"{resourceId}\");");
+        sb.AppendLine("            sync.WithParentRelationship(containerBuilder);");
+        sb.AppendLine("            containerBuilder.WaitForCompletion(sync);");
+        sb.AppendLine($"            inner = containerBuilder;");
 
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -203,6 +215,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
     {
         public string ImageName { get; set; }
         public string ImageRegistry { get; set; }
+        public string ImageTag { get; set; }
         public string BuildCommand { get; set; }
         public string BuildWorkingDirectory { get; set; }
     }
