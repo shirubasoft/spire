@@ -19,7 +19,13 @@ public sealed class ContainerRuntimeResolver : IContainerRuntimeResolver
         var envRuntime = Environment.GetEnvironmentVariable(AspireContainerRuntimeEnvVar);
         if (!string.IsNullOrWhiteSpace(envRuntime))
         {
-            return envRuntime;
+            if (await IsCommandAvailableAsync(envRuntime, cancellationToken))
+            {
+                return envRuntime;
+            }
+
+            throw new InvalidOperationException(
+                $"Container runtime '{envRuntime}' specified by {AspireContainerRuntimeEnvVar} was not found.");
         }
 
         // 2. Check if docker is available
@@ -28,8 +34,15 @@ public sealed class ContainerRuntimeResolver : IContainerRuntimeResolver
             return DockerCommand;
         }
 
-        // 3. Fallback to podman
-        return PodmanCommand;
+        // 3. Check if podman is available
+        if (await IsCommandAvailableAsync(PodmanCommand, cancellationToken))
+        {
+            return PodmanCommand;
+        }
+
+        throw new InvalidOperationException(
+            "No container runtime found. Install docker or podman, or set the "
+            + $"{AspireContainerRuntimeEnvVar} environment variable.");
     }
 
     private static async Task<bool> IsCommandAvailableAsync(string command, CancellationToken cancellationToken)
