@@ -13,7 +13,7 @@ namespace Spire.SourceGenerator.Tests;
 public class SharedResourceGeneratorSpecs
 {
     [Test]
-    public async Task GeneratedInterface_HasInnerProperty()
+    public async Task GeneratedBuilder_HasConfigureMethods()
     {
         // Arrange
         const string json = """
@@ -34,11 +34,13 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(resourceSource).IsNotNull();
 
         var sourceText = resourceSource!.SourceText.ToString();
-        await Assert.That(sourceText).Contains("IResourceBuilder<IResource> Inner { get; }");
+        await Assert.That(sourceText).Contains("ConfigureContainer(Action<IResourceBuilder<ContainerResource>>");
+        await Assert.That(sourceText).Contains("ConfigureProject(Action<IResourceBuilder<ProjectResource>>");
+        await Assert.That(sourceText).Contains("Configure<T>(");
     }
 
     [Test]
-    public async Task GeneratedInterface_HasConfigureMethods()
+    public async Task GeneratedBuilder_ImplementsResourceBuilderInterfaces()
     {
         // Arrange
         const string json = """
@@ -59,9 +61,25 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(resourceSource).IsNotNull();
 
         var sourceText = resourceSource!.SourceText.ToString();
-        await Assert.That(sourceText).Contains("ConfigureContainer(");
-        await Assert.That(sourceText).Contains("ConfigureProject(");
-        await Assert.That(sourceText).Contains("Configure<T>(");
+
+        // Builder should implement IResourceBuilder<X> for each common interface
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithEnvironment>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithArgs>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithEndpoints>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithWaitSupport>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IResourceWithProbes>");
+        await Assert.That(sourceText).Contains("IResourceBuilder<IComputeResource>");
+
+        // Should have explicit Resource property implementations
+        await Assert.That(sourceText).Contains("IResourceWithEnvironment IResourceBuilder<IResourceWithEnvironment>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithArgs IResourceBuilder<IResourceWithArgs>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithEndpoints IResourceBuilder<IResourceWithEndpoints>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithWaitSupport IResourceBuilder<IResourceWithWaitSupport>.Resource");
+        await Assert.That(sourceText).Contains("IResourceWithProbes IResourceBuilder<IResourceWithProbes>.Resource");
+        await Assert.That(sourceText).Contains("IComputeResource IResourceBuilder<IComputeResource>.Resource");
+
+        // Should have public ApplicationBuilder property
+        await Assert.That(sourceText).Contains("public IDistributedApplicationBuilder ApplicationBuilder");
     }
 
     [Test]
@@ -198,7 +216,6 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(resourceSource).IsNotNull();
 
         var sourceText = resourceSource!.SourceText.ToString();
-        await Assert.That(sourceText).Contains("IMyCoolServiceResourceBuilder");
         await Assert.That(sourceText).Contains("MyCoolServiceResourceBuilder");
         await Assert.That(sourceText).Contains("AddMyCoolService");
     }
