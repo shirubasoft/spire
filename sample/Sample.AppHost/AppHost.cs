@@ -4,13 +4,15 @@ builder.Configuration.AddSharedResourcesConfiguration();
 
 builder.AddNotificationService();
 
-var apiService = builder.AddProject<Projects.Sample_ApiService>("apiservice")
+var apiService = builder.AddSampleApiservice()
+    .ConfigureContainer(b => b.WithHttpEndpoint(targetPort: 8080))
     .WithHttpHealthCheck("/health");
 
-builder.AddProject<Projects.Sample_Web>("webfrontend")
+builder.AddSampleWeb()
+    .ConfigureContainer(b => b.WithHttpEndpoint(targetPort: 8080))
     .WithExternalHttpEndpoints()
     .WithHttpHealthCheck("/health")
-    .WithReference(apiService)
+    .WithReference(apiService.GetEndpoint("http"))
     .WaitFor(apiService);
 
 builder.Build().Run();
