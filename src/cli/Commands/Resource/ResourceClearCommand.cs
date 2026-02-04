@@ -41,13 +41,15 @@ public sealed class ResourceClearCommand : Command
             var gitService = new GitService(gitCliResolver);
             var writer = new SharedResourcesWriter();
             var repoReader = new RepositorySharedResourcesReader();
+            var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
+            var globalReader = new GlobalSharedResourcesReader(gitService, tagGenerator);
 
             var handler = new ResourceClearHandler(
                 console,
                 writer,
                 repoReader,
                 gitService,
-                SharedResourcesConfigurationExtensions.GetSharedResources);
+                globalReader);
 
             return await handler.ExecuteAsync(ids, includeRepo, yes, cancellationToken);
         });
@@ -61,7 +63,7 @@ public sealed class ResourceClearCommand : Command
         ISharedResourcesWriter writer,
         IRepositorySharedResourcesReader repoReader,
         IGitService gitService,
-        Func<GlobalSharedResources>? getGlobalResources = null) : base(name: CommandName, description: CommandDescription)
+        IGlobalSharedResourcesReader globalReader) : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(ResourceOptions.ClearIds);
         Options.Add(ResourceOptions.IncludeRepo);
@@ -72,7 +74,7 @@ public sealed class ResourceClearCommand : Command
             writer,
             repoReader,
             gitService,
-            getGlobalResources ?? SharedResourcesConfigurationExtensions.GetSharedResources);
+            globalReader);
 
         this.SetAction(async (parseResult, cancellationToken) =>
         {

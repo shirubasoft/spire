@@ -54,7 +54,11 @@ public class WhenResourcesExistSpecs
         repositoryReader.ReadAsync("/test/repo", Arg.Any<CancellationToken>())
             .Returns(new RepositorySharedResources { Resources = resources });
 
-        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
+        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(yes: true, force: false);
@@ -110,7 +114,11 @@ public class WhenResourcesExistSpecs
         repositoryReader.ReadAsync("/test/repo", Arg.Any<CancellationToken>())
             .Returns(new RepositorySharedResources { Resources = resources });
 
-        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
+        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
 
         // Act - run twice to simulate existing resource
         var result = await handler.ExecuteAsync(yes: true, force: false);
@@ -167,7 +175,11 @@ public class WhenResourcesExistSpecs
             Arg.Do<GlobalSharedResources>(g => capturedResources = g),
             Arg.Any<CancellationToken>());
 
-        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
+        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(yes: true, force: false);

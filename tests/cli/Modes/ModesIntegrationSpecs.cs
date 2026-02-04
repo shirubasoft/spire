@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
+using NSubstitute;
 using Spectre.Console.Testing;
 
 using Spire.Cli.Services.Configuration;
@@ -66,7 +67,10 @@ public class ModesIntegrationSpecs : IAsyncDisposable
         console.Input.PushKey(ConsoleKey.Enter);
 
         var writer = new TestSharedResourcesWriter(configPath);
-        var handler = new ModesHandler(console, writer, () => LoadResources(configPath));
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(LoadResources(configPath)));
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();
@@ -92,7 +96,10 @@ public class ModesIntegrationSpecs : IAsyncDisposable
         console.Input.PushKey(ConsoleKey.Enter);       // Exit
 
         var writer = new TestSharedResourcesWriter(configPath);
-        var handler = new ModesHandler(console, writer, () => LoadResources(configPath));
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(LoadResources(configPath)));
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();
@@ -111,7 +118,10 @@ public class ModesIntegrationSpecs : IAsyncDisposable
 
         var console = new TestConsole();
         var writer = new TestSharedResourcesWriter(configPath);
-        var handler = new ModesHandler(console, writer, () => LoadResources(configPath));
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(LoadResources(configPath)));
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteNonInteractiveAsync("postgres", Mode.Project);
@@ -130,7 +140,10 @@ public class ModesIntegrationSpecs : IAsyncDisposable
 
         var console = new TestConsole();
         var writer = new TestSharedResourcesWriter(configPath);
-        var handler = new ModesHandler(console, writer, () => LoadResources(configPath));
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(LoadResources(configPath)));
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();

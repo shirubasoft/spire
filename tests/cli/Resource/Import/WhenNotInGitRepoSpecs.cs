@@ -24,7 +24,11 @@ public class WhenNotInGitRepoSpecs
         gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((string?)null);
 
-        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
+        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(yes: true, force: false);

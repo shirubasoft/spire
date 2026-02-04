@@ -64,13 +64,17 @@ public class ValidResourceBuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -95,13 +99,17 @@ public class ResourceNotFoundSpecs
 
         var resources = GlobalSharedResources.Empty;
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["unknown-id"], force: false, global: false, CancellationToken.None);
 
@@ -141,13 +149,17 @@ public class NoContainerSettingsSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -191,13 +203,17 @@ public class NoBuildCommandSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -261,13 +277,17 @@ public class ExistingCommitTagSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -332,13 +352,17 @@ public class ForceRebuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: true, global: false, CancellationToken.None);
 
@@ -403,13 +427,17 @@ public class ExistingBranchTagSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -475,13 +503,17 @@ public class BuildFailureSpecs
         containerService.BuildImageAsync(Arg.Any<ContainerImageBuildRequest>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Build failed"));
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-service"], force: false, global: false, CancellationToken.None);
 
@@ -558,13 +590,17 @@ public class MultipleResourceBuildSpecs
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["service-a", "service-b"], force: false, global: false, CancellationToken.None);
 
@@ -647,13 +683,17 @@ public class BuildAllFromRepoSpecs
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(null, force: false, global: false, CancellationToken.None);
 
@@ -731,13 +771,17 @@ public class BuildAllFromGlobalSpecs
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(null, force: false, global: true, CancellationToken.None);
 
@@ -766,13 +810,17 @@ public class BuildNotInRepoWithoutGlobalSpecs
         gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns((string?)null);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(null, force: false, global: false, CancellationToken.None);
 
@@ -846,13 +894,17 @@ public class BuildAllSkipsNonBuildableSpecs
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(null, force: false, global: true, CancellationToken.None);
 

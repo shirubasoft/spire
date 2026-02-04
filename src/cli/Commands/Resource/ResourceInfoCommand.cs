@@ -1,5 +1,9 @@
 using System.CommandLine;
 
+using Spire.Cli.Services;
+using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
+
 namespace Spire.Cli;
 
 /// <summary>
@@ -24,10 +28,16 @@ public sealed class ResourceInfoCommand : Command
     {
         Options.Add(ResourceOptions.Id);
 
-        SetAction(parseResult =>
+        SetAction(async (parseResult, cancellationToken) =>
         {
             var id = parseResult.GetValue(ResourceOptions.Id) ?? string.Empty;
-            var resources = SharedResourcesConfigurationExtensions.GetSharedResources();
+
+            var gitCliResolver = new GitCliResolver();
+            var gitService = new GitService(gitCliResolver);
+            var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
+            var globalReader = new GlobalSharedResourcesReader(gitService, tagGenerator);
+
+            var resources = await globalReader.GetSharedResourcesAsync(cancellationToken);
             var handler = new ResourceInfoHandler();
             return handler.Execute(id, resources, Console.Out, Console.Error);
         });

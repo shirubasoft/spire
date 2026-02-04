@@ -34,12 +34,16 @@ public sealed class ResourceClearAllSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(null, includeRepo: false, yes: false);
@@ -63,12 +67,16 @@ public sealed class ResourceClearAllSpecs
 
         var resources = GlobalSharedResources.Empty;
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(null, includeRepo: false, yes: true);
@@ -121,12 +129,16 @@ public sealed class ResourceClearSpecificSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(["postgres", "redis"], includeRepo: false, yes: false);
@@ -156,12 +168,16 @@ public sealed class ResourceClearSpecificSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(["nonexistent"], includeRepo: false, yes: true);
@@ -232,12 +248,16 @@ public sealed class ResourceClearWithIncludeRepoSpecs
             });
         repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(null, includeRepo: true, yes: false);
@@ -271,12 +291,16 @@ public sealed class ResourceClearWithIncludeRepoSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(null, includeRepo: false, yes: true);
@@ -334,12 +358,16 @@ public sealed class ResourceClearConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync(null, includeRepo: false, yes: false);
@@ -366,12 +394,16 @@ public sealed class ResourceClearConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync(null, includeRepo: false, yes: true);
@@ -401,12 +433,16 @@ public sealed class ResourceClearConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(null, includeRepo: false, yes: false);
@@ -474,12 +510,16 @@ public sealed class ResourceClearRepoOnlyResourcesSpecs
             });
         repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act - clear resource that only exists in repo
         var result = await handler.ExecuteAsync(["sample-web"], includeRepo: true, yes: false);
@@ -506,12 +546,16 @@ public sealed class ResourceClearRepoOnlyResourcesSpecs
 
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act - try to clear resource that doesn't exist in global
         var result = await handler.ExecuteAsync(["sample-web"], includeRepo: false, yes: true);
@@ -560,12 +604,16 @@ public sealed class ResourceClearRepoOnlyResourcesSpecs
             });
         repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(["my-service"], includeRepo: true, yes: false);
@@ -622,12 +670,16 @@ public sealed class ResourceClearRepoOnlyResourcesSpecs
             });
         repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act - clear both resources
         var result = await handler.ExecuteAsync(["global-only", "repo-only"], includeRepo: true, yes: false);

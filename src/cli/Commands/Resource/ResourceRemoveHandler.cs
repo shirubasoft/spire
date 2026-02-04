@@ -14,7 +14,7 @@ public sealed class ResourceRemoveHandler
     private readonly ISharedResourcesWriter _writer;
     private readonly IRepositorySharedResourcesReader _repoReader;
     private readonly IGitService _gitService;
-    private readonly Func<GlobalSharedResources> _getGlobalResources;
+    private readonly IGlobalSharedResourcesReader _globalReader;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceRemoveHandler"/> class.
@@ -24,13 +24,13 @@ public sealed class ResourceRemoveHandler
         ISharedResourcesWriter writer,
         IRepositorySharedResourcesReader repoReader,
         IGitService gitService,
-        Func<GlobalSharedResources> getGlobalResources)
+        IGlobalSharedResourcesReader globalReader)
     {
         _console = console;
         _writer = writer;
         _repoReader = repoReader;
         _gitService = gitService;
-        _getGlobalResources = getGlobalResources;
+        _globalReader = globalReader;
     }
 
     /// <summary>
@@ -42,7 +42,7 @@ public sealed class ResourceRemoveHandler
     /// <returns>The exit code.</returns>
     public async Task<int> ExecuteAsync(string id, bool yes, CancellationToken cancellationToken = default)
     {
-        var globalResources = _getGlobalResources();
+        var globalResources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
 
         if (!globalResources.ContainsResource(id))
         {

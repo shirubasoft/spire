@@ -25,7 +25,10 @@ public class ModesHandlerInteractiveSpecs
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();
@@ -54,7 +57,10 @@ public class ModesHandlerInteractiveSpecs
             .Returns(Task.CompletedTask);
 
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();
@@ -80,7 +86,10 @@ public class ModesHandlerInteractiveSpecs
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         await handler.ExecuteInteractiveAsync();
@@ -102,7 +111,10 @@ public class ModesHandlerInteractiveSpecs
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();
@@ -119,7 +131,10 @@ public class ModesHandlerInteractiveSpecs
         var console = new TestConsole();
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = GlobalSharedResources.Empty;
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteInteractiveAsync();

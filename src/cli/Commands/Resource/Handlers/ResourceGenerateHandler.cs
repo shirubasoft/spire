@@ -20,6 +20,7 @@ public sealed class ResourceGenerateHandler
     private readonly IGitSettingsDetector _gitSettingsDetector;
     private readonly ISharedResourcesWriter _writer;
     private readonly IRepositorySharedResourcesReader _repositoryReader;
+    private readonly IGlobalSharedResourcesReader _globalReader;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceGenerateHandler"/> class.
@@ -31,7 +32,8 @@ public sealed class ResourceGenerateHandler
         IDockerfileAnalyzer dockerfileAnalyzer,
         IGitSettingsDetector gitSettingsDetector,
         ISharedResourcesWriter writer,
-        IRepositorySharedResourcesReader repositoryReader)
+        IRepositorySharedResourcesReader repositoryReader,
+        IGlobalSharedResourcesReader globalReader)
     {
         _console = console;
         _gitService = gitService;
@@ -40,6 +42,7 @@ public sealed class ResourceGenerateHandler
         _gitSettingsDetector = gitSettingsDetector;
         _writer = writer;
         _repositoryReader = repositoryReader;
+        _globalReader = globalReader;
     }
 
     /// <summary>
@@ -278,7 +281,7 @@ public sealed class ResourceGenerateHandler
         CancellationToken cancellationToken)
     {
         // Load and update global config
-        var globalConfig = SharedResourcesConfigurationExtensions.GetSharedResources();
+        var globalConfig = await _globalReader.GetSharedResourcesAsync(cancellationToken);
         var updatedGlobalResources = new Dictionary<string, SharedResource>(globalConfig.Resources)
         {
             [resourceId] = globalResource

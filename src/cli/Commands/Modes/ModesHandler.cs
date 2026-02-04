@@ -11,7 +11,7 @@ public sealed class ModesHandler
 {
     private readonly IAnsiConsole _console;
     private readonly ISharedResourcesWriter _writer;
-    private readonly Func<GlobalSharedResources> _resourcesProvider;
+    private readonly IGlobalSharedResourcesReader _globalReader;
 
     private const string ExitOption = "Exit";
 
@@ -20,15 +20,15 @@ public sealed class ModesHandler
     /// </summary>
     /// <param name="console">The console to use for interactive prompts.</param>
     /// <param name="writer">The writer for persisting changes.</param>
-    /// <param name="resourcesProvider">A function that provides the current resources.</param>
+    /// <param name="globalReader">The global shared resources reader.</param>
     public ModesHandler(
         IAnsiConsole console,
         ISharedResourcesWriter writer,
-        Func<GlobalSharedResources> resourcesProvider)
+        IGlobalSharedResourcesReader globalReader)
     {
         _console = console;
         _writer = writer;
-        _resourcesProvider = resourcesProvider;
+        _globalReader = globalReader;
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ public sealed class ModesHandler
     /// <returns>The exit code.</returns>
     public async Task<int> ExecuteInteractiveAsync(CancellationToken cancellationToken = default)
     {
-        var resources = _resourcesProvider();
+        var resources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
 
         if (resources.Resources.Count == 0)
         {
@@ -48,7 +48,7 @@ public sealed class ModesHandler
 
         while (!cancellationToken.IsCancellationRequested)
         {
-            resources = _resourcesProvider();
+            resources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
             var choices = resources.Resources
                 .Select(kvp => FormatChoice(kvp.Key, kvp.Value.Mode))
                 .ToList();
@@ -93,7 +93,7 @@ public sealed class ModesHandler
     /// <returns>The exit code.</returns>
     public async Task<int> ExecuteNonInteractiveAsync(string id, Mode mode, CancellationToken cancellationToken = default)
     {
-        var resources = _resourcesProvider();
+        var resources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
 
         if (!resources.Resources.TryGetValue(id, out var resource))
         {

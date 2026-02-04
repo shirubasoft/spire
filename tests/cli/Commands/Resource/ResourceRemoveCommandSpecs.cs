@@ -32,12 +32,16 @@ public sealed class ResourceRemoveWhenResourceExistsSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: false);
@@ -88,12 +92,16 @@ public sealed class ResourceRemoveWhenResourceExistsSpecs
             });
         repoReader.ReadAsync("/repo", Arg.Any<CancellationToken>()).Returns(repoResources);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(globalResources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => globalResources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: false);
@@ -141,12 +149,16 @@ public sealed class ResourceRemoveWhenResourceNotFoundSpecs
 
         var resources = GlobalSharedResources.Empty;
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("nonexistent", yes: true);
@@ -186,12 +198,16 @@ public sealed class ResourceRemoveConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync("postgres", yes: false);
@@ -218,12 +234,16 @@ public sealed class ResourceRemoveConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: true);
@@ -254,12 +274,16 @@ public sealed class ResourceRemoveConfirmationSpecs
             }
         };
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => resources);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: false);

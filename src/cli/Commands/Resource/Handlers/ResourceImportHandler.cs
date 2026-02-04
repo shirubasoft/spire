@@ -14,6 +14,7 @@ public sealed class ResourceImportHandler
     private readonly IGitService _gitService;
     private readonly IRepositorySharedResourcesReader _repositoryReader;
     private readonly ISharedResourcesWriter _writer;
+    private readonly IGlobalSharedResourcesReader _globalReader;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResourceImportHandler"/> class.
@@ -22,12 +23,14 @@ public sealed class ResourceImportHandler
         IAnsiConsole console,
         IGitService gitService,
         IRepositorySharedResourcesReader repositoryReader,
-        ISharedResourcesWriter writer)
+        ISharedResourcesWriter writer,
+        IGlobalSharedResourcesReader globalReader)
     {
         _console = console;
         _gitService = gitService;
         _repositoryReader = repositoryReader;
         _writer = writer;
+        _globalReader = globalReader;
     }
 
     /// <summary>
@@ -61,7 +64,7 @@ public sealed class ResourceImportHandler
         var visitedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Load current global config
-        var globalConfig = SharedResourcesConfigurationExtensions.GetSharedResources();
+        var globalConfig = await _globalReader.GetSharedResourcesAsync(cancellationToken);
         var updatedResources = new Dictionary<string, SharedResource>(globalConfig.Resources);
 
         // Import from current repo and external repos recursively

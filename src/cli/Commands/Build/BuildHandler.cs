@@ -16,7 +16,7 @@ public sealed class BuildHandler
     private readonly IContainerImageService _containerImageService;
     private readonly IImageTagGenerator _tagGenerator;
     private readonly IRepositorySharedResourcesReader _repoReader;
-    private readonly Func<GlobalSharedResources> _getResources;
+    private readonly IGlobalSharedResourcesReader _globalReader;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BuildHandler"/> class.
@@ -26,21 +26,21 @@ public sealed class BuildHandler
     /// <param name="containerImageService">The container image service.</param>
     /// <param name="tagGenerator">The image tag generator.</param>
     /// <param name="repoReader">The repository shared resources reader.</param>
-    /// <param name="getResources">Function to get shared resources.</param>
+    /// <param name="globalReader">The global shared resources reader.</param>
     public BuildHandler(
         IAnsiConsole console,
         IGitService gitService,
         IContainerImageService containerImageService,
         IImageTagGenerator tagGenerator,
         IRepositorySharedResourcesReader repoReader,
-        Func<GlobalSharedResources> getResources)
+        IGlobalSharedResourcesReader globalReader)
     {
         _console = console;
         _gitService = gitService;
         _containerImageService = containerImageService;
         _tagGenerator = tagGenerator;
         _repoReader = repoReader;
-        _getResources = getResources;
+        _globalReader = globalReader;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public sealed class BuildHandler
     /// <returns>The exit code.</returns>
     public async Task<int> ExecuteAsync(string[]? ids, bool force, bool global, CancellationToken cancellationToken)
     {
-        var resources = _getResources();
+        var resources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
 
         var resolvedIds = await ResolveIdsAsync(ids, global, resources, cancellationToken);
         if (resolvedIds is null)

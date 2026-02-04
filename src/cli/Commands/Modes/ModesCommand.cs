@@ -2,7 +2,9 @@ using System.CommandLine;
 
 using Spectre.Console;
 
+using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
+using Spire.Cli.Services.Git;
 
 namespace Spire.Cli;
 
@@ -43,7 +45,8 @@ public sealed class ModesCommand : Command
     /// </summary>
     /// <param name="console">The console to use for interactive prompts.</param>
     /// <param name="writer">The writer for persisting changes.</param>
-    public ModesCommand(IAnsiConsole console, ISharedResourcesWriter writer)
+    /// <param name="globalReader">Optional global shared resources reader (for testing).</param>
+    public ModesCommand(IAnsiConsole console, ISharedResourcesWriter writer, IGlobalSharedResourcesReader? globalReader = null)
         : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(_idOption);
@@ -67,7 +70,8 @@ public sealed class ModesCommand : Command
                 return 1;
             }
 
-            var handler = new ModesHandler(console, writer, SharedResourcesConfigurationExtensions.GetSharedResources);
+            var reader = globalReader ?? CreateDefaultReader();
+            var handler = new ModesHandler(console, writer, reader);
 
             if (id is not null && mode is not null)
             {
@@ -76,5 +80,13 @@ public sealed class ModesCommand : Command
 
             return await handler.ExecuteInteractiveAsync(cancellationToken);
         });
+    }
+
+    private static GlobalSharedResourcesReader CreateDefaultReader()
+    {
+        var gitCliResolver = new GitCliResolver();
+        var gitService = new GitService(gitCliResolver);
+        var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
+        return new GlobalSharedResourcesReader(gitService, tagGenerator);
     }
 }

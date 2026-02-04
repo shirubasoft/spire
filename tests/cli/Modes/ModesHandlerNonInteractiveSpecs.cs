@@ -23,7 +23,10 @@ public class ModesHandlerNonInteractiveSpecs
             .Returns(Task.CompletedTask);
 
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteNonInteractiveAsync("postgres", Mode.Project);
@@ -42,7 +45,10 @@ public class ModesHandlerNonInteractiveSpecs
         var console = new TestConsole();
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteNonInteractiveAsync("nonexistent", Mode.Project);
@@ -60,7 +66,10 @@ public class ModesHandlerNonInteractiveSpecs
         var console = new TestConsole();
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
-        var handler = new ModesHandler(console, writer, () => resources);
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
 
         // Act
         var result = await handler.ExecuteNonInteractiveAsync("postgres", Mode.Container);

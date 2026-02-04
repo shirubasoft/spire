@@ -65,9 +65,13 @@ public class RepositorySettingsGenerationSpecs
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
         var handler = new ResourceGenerateHandler(
             console, gitService, projectAnalyzer, dockerfileAnalyzer,
-            gitSettingsDetector, writer, repositoryReader);
+            gitSettingsDetector, writer, repositoryReader, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(
@@ -120,9 +124,13 @@ public class RepositorySettingsGenerationSpecs
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
         var handler = new ResourceGenerateHandler(
             console, gitService, projectAnalyzer, dockerfileAnalyzer,
-            gitSettingsDetector, writer, repositoryReader);
+            gitSettingsDetector, writer, repositoryReader, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(
@@ -171,9 +179,13 @@ public class RepositorySettingsGenerationSpecs
             Arg.Do<GlobalSharedResources>(g => capturedGlobal = g),
             Arg.Any<CancellationToken>());
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
         var handler = new ResourceGenerateHandler(
             console, gitService, projectAnalyzer, dockerfileAnalyzer,
-            gitSettingsDetector, writer, repositoryReader);
+            gitSettingsDetector, writer, repositoryReader, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(
@@ -225,9 +237,13 @@ public class RepositorySettingsGenerationSpecs
             Arg.Do<GlobalSharedResources>(g => capturedGlobal = g),
             Arg.Any<CancellationToken>());
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
         var handler = new ResourceGenerateHandler(
             console, gitService, projectAnalyzer, dockerfileAnalyzer,
-            gitSettingsDetector, writer, repositoryReader);
+            gitSettingsDetector, writer, repositoryReader, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(
@@ -286,9 +302,13 @@ public class RepositorySettingsGenerationSpecs
             Arg.Any<string>(),
             Arg.Any<CancellationToken>());
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
         var handler = new ResourceGenerateHandler(
             console, gitService, projectAnalyzer, dockerfileAnalyzer,
-            gitSettingsDetector, writer, repositoryReader);
+            gitSettingsDetector, writer, repositoryReader, globalReader);
 
         // Act
         var result = await handler.ExecuteAsync(

@@ -59,13 +59,17 @@ public class DotnetProjectBuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io/myorg", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
@@ -128,13 +132,17 @@ public class DockerfileBuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io/myorg", "postgres-db", "def5678", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["postgres-db"], force: false, global: false, CancellationToken.None);
 
@@ -198,13 +206,17 @@ public class ImageExistsSkipIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
@@ -265,13 +277,17 @@ public class ForceRebuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-api"], force: true, global: false, CancellationToken.None);
 
@@ -331,13 +347,17 @@ public class AllTagsAppliedIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
@@ -405,13 +425,17 @@ public class DirtyRepositoryIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234-dirty", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+
         var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
             repoReader,
-            () => resources);
+            globalReader);
 
         var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 

@@ -3,6 +3,7 @@ using System.CommandLine;
 using Spectre.Console;
 
 using Spire.Cli.Commands.Resource.Handlers;
+using Spire.Cli.Services;
 using Spire.Cli.Services.Analysis;
 using Spire.Cli.Services.Configuration;
 using Spire.Cli.Services.Git;
@@ -71,6 +72,8 @@ public sealed class ResourceGenerateCommand : Command
             var gitSettingsDetector = new GitSettingsDetector(gitService);
             var writer = new SharedResourcesWriter();
             var repositoryReader = new RepositorySharedResourcesReader();
+            var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
+            var globalReader = new GlobalSharedResourcesReader(gitService, tagGenerator);
 
             var handler = new ResourceGenerateHandler(
                 console,
@@ -79,7 +82,8 @@ public sealed class ResourceGenerateCommand : Command
                 dockerfileAnalyzer,
                 gitSettingsDetector,
                 writer,
-                repositoryReader);
+                repositoryReader,
+                globalReader);
 
             return await handler.ExecuteAsync(path, id, imageName, imageRegistry, yes, cancellationToken);
         });

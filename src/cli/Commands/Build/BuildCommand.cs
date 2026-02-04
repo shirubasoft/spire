@@ -59,6 +59,7 @@ public sealed class BuildCommand : Command
             var containerImageService = new ContainerImageService(runtimeResolver, commandRunner, console);
             var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
             var repoReader = new RepositorySharedResourcesReader();
+            var globalReader = new GlobalSharedResourcesReader(gitService, tagGenerator);
 
             var handler = new BuildHandler(
                 console,
@@ -66,7 +67,7 @@ public sealed class BuildCommand : Command
                 containerImageService,
                 tagGenerator,
                 repoReader,
-                SharedResourcesConfigurationExtensions.GetSharedResources);
+                globalReader);
 
             return await handler.ExecuteAsync(ids, force, global, cancellationToken);
         });
@@ -81,7 +82,7 @@ public sealed class BuildCommand : Command
         IContainerImageService containerImageService,
         IImageTagGenerator tagGenerator,
         IRepositorySharedResourcesReader repoReader,
-        Func<GlobalSharedResources>? getResources = null) : base(name: CommandName, description: CommandDescription)
+        IGlobalSharedResourcesReader globalReader) : base(name: CommandName, description: CommandDescription)
     {
         Options.Add(IdsOption);
         Options.Add(CommonOptions.Force);
@@ -93,7 +94,7 @@ public sealed class BuildCommand : Command
             containerImageService,
             tagGenerator,
             repoReader,
-            getResources ?? SharedResourcesConfigurationExtensions.GetSharedResources);
+            globalReader);
 
         SetAction(async (parseResult, cancellationToken) =>
         {

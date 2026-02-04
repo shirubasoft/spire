@@ -3,6 +3,7 @@ using System.CommandLine;
 using Spectre.Console;
 
 using Spire.Cli.Commands.Resource.Handlers;
+using Spire.Cli.Services;
 using Spire.Cli.Services.Configuration;
 using Spire.Cli.Services.Git;
 
@@ -41,8 +42,10 @@ public sealed class ResourceImportCommand : Command
             var gitService = new GitService(gitCliResolver);
             var repositoryReader = new RepositorySharedResourcesReader();
             var writer = new SharedResourcesWriter();
+            var tagGenerator = new ImageTagGenerator(new BranchNameSanitizer());
+            var globalReader = new GlobalSharedResourcesReader(gitService, tagGenerator);
 
-            var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer);
+            var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
             return await handler.ExecuteAsync(yes, force, cancellationToken);
         });
     }

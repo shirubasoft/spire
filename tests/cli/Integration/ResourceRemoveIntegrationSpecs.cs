@@ -52,12 +52,16 @@ public sealed class ResourceRemoveIntegrationSpecs
         var gitService = Substitute.For<IGitService>();
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: true);
@@ -92,12 +96,16 @@ public sealed class ResourceRemoveIntegrationSpecs
                 IsDirty = false
             });
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: true);
@@ -135,12 +143,16 @@ public sealed class ResourceRemoveIntegrationSpecs
                 IsDirty = false
             });
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: true);
@@ -169,12 +181,16 @@ public sealed class ResourceRemoveIntegrationSpecs
         var gitService = Substitute.For<IGitService>();
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("nonexistent", yes: true);
@@ -197,12 +213,16 @@ public sealed class ResourceRemoveIntegrationSpecs
         var gitService = Substitute.For<IGitService>();
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         var result = await handler.ExecuteAsync("postgres", yes: true);
@@ -230,12 +250,16 @@ public sealed class ResourceRemoveIntegrationSpecs
         var gitService = Substitute.For<IGitService>();
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync("postgres", yes: true);
@@ -273,12 +297,16 @@ public sealed class ResourceRemoveIntegrationSpecs
                 IsDirty = false
             });
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync("postgres", yes: true);
@@ -302,12 +330,16 @@ public sealed class ResourceRemoveIntegrationSpecs
         var gitService = Substitute.For<IGitService>();
         gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
 
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(ReadGlobalConfig()!));
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
             repoReader,
             gitService,
-            () => ReadGlobalConfig()!);
+            globalReader);
 
         // Act
         await handler.ExecuteAsync("postgres", yes: true);
