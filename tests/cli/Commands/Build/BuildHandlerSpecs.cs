@@ -631,15 +631,8 @@ public class BuildAllFromRepoSpecs
             }
         };
 
-        gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(true);
-        gitService.GetRepositoryAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new GitRepository
-            {
-                RootPath = "/test/repo",
-                CurrentBranch = "main",
-                LatestCommitHash = "abc1234def",
-                IsDirty = false
-            });
+        gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns("/test/repo");
 
         repoReader.ReadAsync("/test/repo", Arg.Any<CancellationToken>())
             .Returns(repoResources);
@@ -770,7 +763,8 @@ public class BuildNotInRepoWithoutGlobalSpecs
 
         var resources = GlobalSharedResources.Empty;
 
-        gitService.IsRepositoryCloned(Arg.Any<string>()).Returns(false);
+        gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns((string?)null);
 
         var handler = new BuildHandler(
             console,

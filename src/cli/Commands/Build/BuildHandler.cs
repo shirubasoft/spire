@@ -138,10 +138,10 @@ public sealed class BuildHandler
         var currentDir = Directory.GetCurrentDirectory();
         try
         {
-            if (_gitService.IsRepositoryCloned(currentDir))
+            var repoRoot = await _gitService.GetRepositoryRootAsync(currentDir, cancellationToken);
+            if (repoRoot is not null)
             {
-                var gitRepo = await _gitService.GetRepositoryAsync(currentDir, cancellationToken);
-                var repoResources = await _repoReader.ReadAsync(gitRepo.RootPath, cancellationToken);
+                var repoResources = await _repoReader.ReadAsync(repoRoot, cancellationToken);
 
                 if (repoResources is not null && repoResources.Resources.Count > 0)
                 {
