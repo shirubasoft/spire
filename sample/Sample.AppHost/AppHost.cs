@@ -1,5 +1,9 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.Configuration.AddSharedResourcesConfiguration();
+
+builder.AddNotificationService();
+
 var apiService = builder.AddProject<Projects.Sample_ApiService>("apiservice")
     .WithHttpHealthCheck("/health");
 

@@ -1,5 +1,7 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.1.0">
 
+  <Import Project="../../src/hosting/build/Spire.Hosting.props" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,8 +11,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/hosting/Spire.Hosting.csproj"
+      IsAspireProjectResource="false" />
+    <ProjectReference Include="../../src/source-generator/Spire.SourceGenerator.csproj"
+      OutputItemType="Analyzer"
+      ReferenceOutputAssembly="false"
+      IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sample.ApiService\Sample.ApiService.csproj" />
     <ProjectReference Include="..\Sample.Web\Sample.Web.csproj" />
   </ItemGroup>
+
+  <Import Project="../../src/hosting/build/Spire.Hosting.targets" />
 
 </Project>
