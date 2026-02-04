@@ -151,11 +151,15 @@ public sealed class BuildHandler
                         .Where(key => resources.Resources.TryGetValue(key, out var r) && r.ContainerMode is not null)
                         .ToArray();
                 }
+
+                // In a repo but no resources configured in .aspire/settings.json
+                _console.MarkupLine("No shared resources found in repository settings. Use [yellow]--global[/] to build from global config, or [yellow]--ids[/] to specify resources.");
+                return null;
             }
         }
         catch
         {
-            // Not in a git repository or error reading - fall through
+            // Error reading git or repo settings - fall through
         }
 
         // Not in a repo and no --global flag
