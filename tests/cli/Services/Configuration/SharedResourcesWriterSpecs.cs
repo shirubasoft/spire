@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 using Spire.Cli.Services.Configuration;
 
@@ -186,5 +187,155 @@ public class SharedResourcesWriterPreservesExistingSettingsSpecs
         // appHostPath should be null/absent since it wasn't in the original
         var hasAppHostPath = document.RootElement.TryGetProperty("appHostPath", out var appHostPath);
         await Assert.That(!hasAppHostPath || appHostPath.ValueKind == JsonValueKind.Null).IsTrue();
+    }
+}
+
+/// <summary>
+/// Tests that the writer produces correct JSON structure without extraneous fields.
+/// </summary>
+public class SharedResourcesWriterJsonStructureSpecs
+{
+    private string _tempDirectory = null!;
+    private SharedResourcesWriter _writer = null!;
+
+    [Before(Test)]
+    public void Setup()
+    {
+        _tempDirectory = Path.Combine(Path.GetTempPath(), $"spire-test-{Guid.NewGuid()}");
+        Directory.CreateDirectory(Path.Combine(_tempDirectory, ".aspire"));
+        _writer = new SharedResourcesWriter();
+    }
+
+    [After(Test)]
+    public void Cleanup()
+    {
+        if (Directory.Exists(_tempDirectory))
+        {
+            Directory.Delete(_tempDirectory, recursive: true);
+        }
+    }
+
+    [Test]
+    public async Task SaveRepositoryAsync_DoesNotWriteCountField()
+    {
+        // Arrange
+        var resources = new RepositorySharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["service-a"] = new SharedResource { Mode = Mode.Container },
+                ["service-b"] = new SharedResource { Mode = Mode.Project }
+            }
+        };
+
+        // Act
+        await _writer.SaveRepositoryAsync(resources, _tempDirectory);
+
+        // Assert
+        var json = await File.ReadAllTextAsync(
+            Path.Combine(_tempDirectory, ".aspire", "settings.json"));
+
+        await Assert.That(json).DoesNotContain("\"count\"");
+    }
+
+    [Test]
+    public async Task SaveRepositoryAsync_IncludesSchemaField()
+    {
+        // Arrange
+        var resources = new RepositorySharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["my-service"] = new SharedResource { Mode = Mode.Container }
+            }
+        };
+
+        // Act
+        await _writer.SaveRepositoryAsync(resources, _tempDirectory);
+
+        // Assert
+        var json = await File.ReadAllTextAsync(
+            Path.Combine(_tempDirectory, ".aspire", "settings.json"));
+        using var document = JsonDocument.Parse(json);
+
+        await Assert.That(document.RootElement.TryGetProperty("$schema", out var schema)).IsTrue();
+        await Assert.That(schema.GetString())
+            .IsEqualTo("https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/aspire-settings.schema.json");
+    }
+}
+
+/// <summary>
+/// Tests that GlobalSharedResources serialization produces correct JSON.
+/// </summary>
+public class GlobalSharedResourcesSerializationSpecs
+{
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        WriteIndented = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    [Test]
+    public async Task Serialize_DoesNotWriteCountField()
+    {
+        // Arrange
+        var resources = new GlobalSharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["service-a"] = new SharedResource { Mode = Mode.Container },
+                ["service-b"] = new SharedResource { Mode = Mode.Project }
+            }
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(resources, JsonOptions);
+
+        // Assert
+        await Assert.That(json).DoesNotContain("\"count\"");
+    }
+
+    [Test]
+    public async Task Serialize_WithSchema_IncludesSchemaField()
+    {
+        // Arrange
+        var resources = new GlobalSharedResources
+        {
+            Schema = "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/shared-resources-global.schema.json",
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["my-service"] = new SharedResource { Mode = Mode.Container }
+            }
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(resources, JsonOptions);
+        using var document = JsonDocument.Parse(json);
+
+        // Assert
+        await Assert.That(document.RootElement.TryGetProperty("$schema", out var schema)).IsTrue();
+        await Assert.That(schema.GetString())
+            .IsEqualTo("https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/shared-resources-global.schema.json");
+    }
+
+    [Test]
+    public async Task Serialize_WithoutSchema_OmitsSchemaField()
+    {
+        // Arrange
+        var resources = new GlobalSharedResources
+        {
+            Resources = new Dictionary<string, SharedResource>
+            {
+                ["my-service"] = new SharedResource { Mode = Mode.Container }
+            }
+        };
+
+        // Act
+        var json = JsonSerializer.Serialize(resources, JsonOptions);
+
+        // Assert
+        await Assert.That(json).DoesNotContain("\"$schema\"");
     }
 }

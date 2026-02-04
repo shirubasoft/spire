@@ -170,21 +170,30 @@ public sealed class ResourceGenerateHandler
         string relativeWorkingDirectory;
         string buildCommand;
 
+        string absoluteProjectPath;
+        string relativeProjectPath;
+
         if (project is not null)
         {
             absoluteWorkingDirectory = project.ProjectDirectory;
+            absoluteProjectPath = project.ProjectFilePath;
             buildCommand = project.BuildCommand;
             relativeWorkingDirectory = gitSettings is not null
                 ? PathResolver.ToRelative(project.ProjectDirectory, gitSettings.RepositoryRoot)
                 : project.ProjectDirectory;
+            relativeProjectPath = gitSettings is not null
+                ? PathResolver.ToRelative(project.ProjectFilePath, gitSettings.RepositoryRoot)
+                : project.ProjectFilePath;
         }
         else
         {
             absoluteWorkingDirectory = dockerfile!.BuildContext;
+            absoluteProjectPath = "";
             buildCommand = dockerfile.BuildCommand;
             relativeWorkingDirectory = gitSettings is not null
                 ? PathResolver.ToRelative(dockerfile.BuildContext, gitSettings.RepositoryRoot)
                 : dockerfile.BuildContext;
+            relativeProjectPath = "";
         }
 
         // Global resource with absolute paths
@@ -200,7 +209,7 @@ public sealed class ResourceGenerateHandler
                 BuildWorkingDirectory = absoluteWorkingDirectory
             },
             ProjectMode = project is not null
-                ? new ProjectModeSettings { ProjectDirectory = absoluteWorkingDirectory }
+                ? new ProjectModeSettings { ProjectPath = absoluteProjectPath }
                 : null,
             GitRepository = gitSettings is not null
                 ? new GitRepositorySettings { Url = gitSettings.RemoteUrl, DefaultBranch = gitSettings.DefaultBranch }
@@ -220,7 +229,7 @@ public sealed class ResourceGenerateHandler
                 BuildWorkingDirectory = relativeWorkingDirectory
             },
             ProjectMode = project is not null
-                ? new ProjectModeSettings { ProjectDirectory = relativeWorkingDirectory }
+                ? new ProjectModeSettings { ProjectPath = relativeProjectPath }
                 : null,
             GitRepository = null
         };
@@ -240,7 +249,7 @@ public sealed class ResourceGenerateHandler
 
         if (project is not null)
         {
-            _console.MarkupLine($"  [blue]ProjectMode.ProjectDirectory:[/] {resource.ProjectMode?.ProjectDirectory}");
+            _console.MarkupLine($"  [blue]ProjectMode.ProjectPath:[/] {resource.ProjectMode?.ProjectPath}");
         }
 
         if (resource.ContainerMode is not null)

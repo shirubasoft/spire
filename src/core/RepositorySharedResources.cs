@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Spire;
 
 /// <summary>
@@ -24,6 +26,7 @@ public sealed record RepositorySharedResources
     /// <summary>
     /// Gets the number of resources in this instance.
     /// </summary>
+    [JsonIgnore]
     public int Count => Resources.Count;
 
     /// <summary>

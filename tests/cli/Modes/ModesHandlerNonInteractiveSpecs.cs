@@ -93,7 +93,7 @@ public class ModesHandlerNonInteractiveSpecs
         },
         ProjectMode = new ProjectModeSettings
         {
-            ProjectDirectory = "/path/to/project"
+            ProjectPath = "/path/to/project.csproj"
         },
         GitRepository = null
     };

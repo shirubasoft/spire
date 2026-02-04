@@ -75,7 +75,7 @@ public class RepositorySharedResourcesDeserializationSpecs
                             "buildWorkingDirectory": "./src/MyService"
                         },
                         "projectMode": {
-                            "projectDirectory": "./src/MyService"
+                            "projectPath": "./src/MyService/MyService.csproj"
                         }
                     }
                 }
@@ -132,7 +132,7 @@ public class RepositorySharedResourcesDeserializationSpecs
                     "api": {
                         "mode": "project",
                         "projectMode": {
-                            "projectDirectory": "./src/Api"
+                            "projectPath": "./src/Api/Api.csproj"
                         }
                     }
                 }

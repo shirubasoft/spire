@@ -82,8 +82,8 @@ public class RepositorySettingsGenerationSpecs
         await Assert.That(capturedRepo).IsNotNull();
         await Assert.That(capturedRepo!.Resources["my-service"].ContainerMode!.BuildWorkingDirectory)
             .IsEqualTo("./src/MyService");
-        await Assert.That(capturedRepo.Resources["my-service"].ProjectMode!.ProjectDirectory)
-            .IsEqualTo("./src/MyService");
+        await Assert.That(capturedRepo.Resources["my-service"].ProjectMode!.ProjectPath)
+            .IsEqualTo("./src/MyService/MyService.csproj");
     }
 
     [Test]
@@ -188,8 +188,8 @@ public class RepositorySettingsGenerationSpecs
         await Assert.That(capturedGlobal).IsNotNull();
         await Assert.That(capturedGlobal!.Resources["my-service"].ContainerMode!.BuildWorkingDirectory)
             .IsEqualTo(projectDir);
-        await Assert.That(capturedGlobal.Resources["my-service"].ProjectMode!.ProjectDirectory)
-            .IsEqualTo(projectDir);
+        await Assert.That(capturedGlobal.Resources["my-service"].ProjectMode!.ProjectPath)
+            .IsEqualTo(csprojPath);
     }
 
     [Test]
@@ -245,5 +245,68 @@ public class RepositorySettingsGenerationSpecs
             .IsEqualTo("https://github.com/user/my-app");
         await Assert.That(capturedGlobal.Resources["my-service"].GitRepository!.DefaultBranch)
             .IsEqualTo("main");
+    }
+
+    [Test]
+    public async Task Generate_ProjectPath_EndsWithCsproj()
+    {
+        // Arrange
+        var projectDir = Path.Combine(_tempDir, "src", "MyService");
+        Directory.CreateDirectory(projectDir);
+        var csprojPath = Path.Combine(projectDir, "MyService.csproj");
+        await File.WriteAllTextAsync(csprojPath, "<Project></Project>");
+
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var projectAnalyzer = new ProjectAnalyzer();
+        var dockerfileAnalyzer = new DockerfileAnalyzer();
+        var gitSettingsDetector = Substitute.For<IGitSettingsDetector>();
+        var writer = Substitute.For<ISharedResourcesWriter>();
+        var repositoryReader = Substitute.For<IRepositorySharedResourcesReader>();
+
+        gitSettingsDetector.DetectAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new GitSettingsResult
+            {
+                RepositoryRoot = _tempDir,
+                RemoteUrl = new Uri("https://github.com/user/my-app"),
+                DefaultBranch = "main"
+            });
+
+        repositoryReader.ReadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new RepositorySharedResources { Resources = [] });
+
+        GlobalSharedResources? capturedGlobal = null;
+        await writer.SaveGlobalAsync(
+            Arg.Do<GlobalSharedResources>(g => capturedGlobal = g),
+            Arg.Any<CancellationToken>());
+
+        RepositorySharedResources? capturedRepo = null;
+        await writer.SaveRepositoryAsync(
+            Arg.Do<RepositorySharedResources>(r => capturedRepo = r),
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>());
+
+        var handler = new ResourceGenerateHandler(
+            console, gitService, projectAnalyzer, dockerfileAnalyzer,
+            gitSettingsDetector, writer, repositoryReader);
+
+        // Act
+        var result = await handler.ExecuteAsync(
+            path: csprojPath,
+            id: "my-service",
+            imageName: null,
+            imageRegistry: null,
+            yes: true);
+
+        // Assert - both global and repo project paths must end with .csproj
+        await Assert.That(result).IsEqualTo(0);
+
+        await Assert.That(capturedGlobal).IsNotNull();
+        await Assert.That(capturedGlobal!.Resources["my-service"].ProjectMode!.ProjectPath)
+            .EndsWith(".csproj");
+
+        await Assert.That(capturedRepo).IsNotNull();
+        await Assert.That(capturedRepo!.Resources["my-service"].ProjectMode!.ProjectPath)
+            .EndsWith(".csproj");
     }
 }

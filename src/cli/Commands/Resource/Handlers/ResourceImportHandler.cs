@@ -237,7 +237,7 @@ public sealed class ResourceImportHandler
         {
             projectMode = projectMode with
             {
-                ProjectDirectory = PathResolver.ToAbsolute(projectMode.ProjectDirectory, repoRoot)
+                ProjectPath = PathResolver.ToAbsolute(projectMode.ProjectPath, repoRoot)
             };
         }
 

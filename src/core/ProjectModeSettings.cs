@@ -6,7 +6,7 @@ namespace Spire;
 public sealed record ProjectModeSettings
 {
     /// <summary>
-    /// The path to the project directory.
+    /// The path to the project file (.csproj).
     /// </summary>
-    public required string ProjectDirectory { get; init; }
+    public required string ProjectPath { get; init; }
 }

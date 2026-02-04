@@ -92,7 +92,7 @@ public class SharedResourceDeserializationSpecs
             {
                 "mode": "project",
                 "projectMode": {
-                    "projectDirectory": "./src/MyService"
+                    "projectPath": "./src/MyService/MyService.csproj"
                 }
             }
             """;
@@ -103,7 +103,7 @@ public class SharedResourceDeserializationSpecs
         // Assert
         await Assert.That(resource).IsNotNull();
         await Assert.That(resource!.ProjectMode).IsNotNull();
-        await Assert.That(resource.ProjectMode!.ProjectDirectory).IsEqualTo("./src/MyService");
+        await Assert.That(resource.ProjectMode!.ProjectPath).IsEqualTo("./src/MyService/MyService.csproj");
     }
 
     [Test]
@@ -145,7 +145,7 @@ public class SharedResourceDeserializationSpecs
                     "buildWorkingDirectory": "./src/MyService"
                 },
                 "projectMode": {
-                    "projectDirectory": "./src/MyService"
+                    "projectPath": "./src/MyService/MyService.csproj"
                 },
                 "gitRepository": {
                     "url": "https://github.com/org/repo",
