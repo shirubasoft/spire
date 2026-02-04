@@ -1,5 +1,4 @@
 using CliWrap;
-using CliWrap.Exceptions;
 
 namespace Spire.Cli.Services;
 
@@ -49,15 +48,13 @@ public sealed class ContainerRuntimeResolver : IContainerRuntimeResolver
     {
         try
         {
-            await CliWrap.Cli.Wrap(command)
+            var result = await CliWrap.Cli.Wrap(command)
                 .WithArguments("--version")
-                .WithValidation(CommandResultValidation.ZeroExitCode)
+                .WithStandardOutputPipe(PipeTarget.ToStream(Stream.Null))
+                .WithStandardErrorPipe(PipeTarget.ToStream(Stream.Null))
+                .WithValidation(CommandResultValidation.None)
                 .ExecuteAsync(cancellationToken);
-            return true;
-        }
-        catch (CommandExecutionException)
-        {
-            return false;
+            return result.ExitCode == 0;
         }
         catch (System.ComponentModel.Win32Exception)
         {
