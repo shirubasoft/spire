@@ -2,8 +2,9 @@ using NSubstitute;
 
 using Spectre.Console.Testing;
 
-using Spire.Cli.Commands.Resource;
+using Spire.Cli.Commands.Build;
 using Spire.Cli.Services;
+using Spire.Cli.Services.Configuration;
 using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests;
@@ -23,6 +24,7 @@ public class DotnetProjectBuildIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -49,7 +51,7 @@ public class DotnetProjectBuildIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "feature/add-auth",
+                CurrentBranch = "feature/add-auth",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -57,14 +59,15 @@ public class DotnetProjectBuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io/myorg", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-api"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
 
@@ -90,6 +93,7 @@ public class DockerfileBuildIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -116,7 +120,7 @@ public class DockerfileBuildIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "def5678abc1234",
                 IsDirty = false
             });
@@ -124,14 +128,15 @@ public class DockerfileBuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io/myorg", "postgres-db", "def5678", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["postgres-db"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["postgres-db"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
 
@@ -157,6 +162,7 @@ public class ImageExistsSkipIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -183,7 +189,7 @@ public class ImageExistsSkipIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -192,14 +198,15 @@ public class ImageExistsSkipIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-api"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await Assert.That(console.Output).Contains("skipping");
@@ -222,6 +229,7 @@ public class ForceRebuildIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -248,7 +256,7 @@ public class ForceRebuildIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -257,14 +265,15 @@ public class ForceRebuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-api"], force: true, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-api"], force: true, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
         await Assert.That(console.Output).Contains("--force");
@@ -287,6 +296,7 @@ public class AllTagsAppliedIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -313,7 +323,7 @@ public class AllTagsAppliedIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "feature/auth",
+                CurrentBranch = "feature/auth",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = false
             });
@@ -321,14 +331,15 @@ public class AllTagsAppliedIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-api"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
 
@@ -359,6 +370,7 @@ public class DirtyRepositoryIntegrationSpecs
         var containerService = Substitute.For<IContainerImageService>();
         var branchSanitizer = new BranchNameSanitizer();
         var tagGenerator = new ImageTagGenerator(branchSanitizer);
+        var repoReader = Substitute.For<IRepositorySharedResourcesReader>();
 
         var resources = new GlobalSharedResources
         {
@@ -385,7 +397,7 @@ public class DirtyRepositoryIntegrationSpecs
             .Returns(new GitRepository
             {
                 RootPath = "/test/repo",
-            CurrentBranch = "main",
+                CurrentBranch = "main",
                 LatestCommitHash = "abc1234def5678",
                 IsDirty = true
             });
@@ -393,14 +405,15 @@ public class DirtyRepositoryIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234-dirty", Arg.Any<CancellationToken>())
             .Returns(false);
 
-        var handler = new ResourceBuildImageHandler(
+        var handler = new BuildHandler(
             console,
             gitService,
             containerService,
             tagGenerator,
+            repoReader,
             () => resources);
 
-        var result = await handler.ExecuteAsync(["my-api"], force: false, CancellationToken.None);
+        var result = await handler.ExecuteAsync(["my-api"], force: false, global: false, CancellationToken.None);
 
         await Assert.That(result).IsEqualTo(0);
 
