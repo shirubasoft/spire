@@ -15,6 +15,8 @@ usage() {
 
 [[ $# -eq 1 ]] || usage
 
+dotnet tool uninstall "$TOOL_NAME" --global || true
+
 case "$1" in
     local)
         ARTIFACTS_DIR="$SCRIPT_DIR/artifacts"
@@ -35,7 +37,7 @@ case "$1" in
         rm -rf "$NUGET_PACKAGES_DIR"/spire.cli
 
         echo "Installing local CLI globally (v$VERSION)..."
-        dotnet tool update "$TOOL_NAME" \
+        dotnet tool install "$TOOL_NAME" \
             --global \
             --allow-downgrade \
             --add-source "$ARTIFACTS_DIR" \
@@ -43,7 +45,7 @@ case "$1" in
         ;;
     nuget)
         echo "Installing NuGet CLI globally..."
-        dotnet tool update "$TOOL_NAME" \
+        dotnet tool install "$TOOL_NAME" \
             --global \
             --allow-downgrade
         ;;

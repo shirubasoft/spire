@@ -14,6 +14,8 @@ function Show-Usage {
 
 if ($args.Count -ne 1) { Show-Usage }
 
+dotnet tool uninstall $ToolName --global -ErrorAction SilentlyContinue | Out-Null
+
 switch ($args[0]) {
     "local" {
         $ArtifactsDir = Join-Path $ScriptDir "artifacts"
@@ -38,7 +40,7 @@ switch ($args[0]) {
             ForEach-Object { Remove-Item $_.FullName -Recurse -Force }
 
         Write-Host "Installing local CLI globally (v$Version)..."
-        dotnet tool update $ToolName `
+        dotnet tool install $ToolName `
             --global `
             --allow-downgrade `
             --add-source $ArtifactsDir `
@@ -47,7 +49,7 @@ switch ($args[0]) {
     }
     "nuget" {
         Write-Host "Installing NuGet CLI globally..."
-        dotnet tool update $ToolName `
+        dotnet tool install $ToolName `
             --global `
             --allow-downgrade
         if ($LASTEXITCODE -ne 0) { throw "Tool install failed" }
