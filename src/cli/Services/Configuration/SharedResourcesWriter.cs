@@ -13,12 +13,20 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
     private const string RepositorySettingsDirectory = ".aspire";
     private const string RepositorySettingsFileName = "settings.json";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    private static readonly JsonSerializerOptions WriteOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
         WriteIndented = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
+
+    private static readonly JsonSerializerOptions ReadOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        AllowTrailingCommas = true
     };
 
     /// <inheritdoc />
@@ -32,7 +40,7 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
             Directory.CreateDirectory(directory);
         }
 
-        var json = JsonSerializer.Serialize(resources, JsonOptions);
+        var json = JsonSerializer.Serialize(resources, WriteOptions);
         await File.WriteAllTextAsync(configPath, json, cancellationToken);
     }
 
@@ -47,8 +55,43 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
             Directory.CreateDirectory(directory);
         }
 
-        var json = JsonSerializer.Serialize(resources, JsonOptions);
+        // Read existing settings to preserve appHostPath
+        string? existingAppHostPath = null;
+        if (File.Exists(settingsPath))
+        {
+            var existingJson = await File.ReadAllTextAsync(settingsPath, cancellationToken);
+            if (!string.IsNullOrWhiteSpace(existingJson))
+            {
+                var existingSettings = JsonSerializer.Deserialize<AspireSettings>(existingJson, ReadOptions);
+                existingAppHostPath = existingSettings?.AppHostPath;
+            }
+        }
+
+        // Wrap in AspireSettings structure per schema
+        var aspireSettings = new AspireSettings
+        {
+            AppHostPath = existingAppHostPath,
+            SharedResources = resources
+        };
+
+        var json = JsonSerializer.Serialize(aspireSettings, WriteOptions);
         await File.WriteAllTextAsync(settingsPath, json, cancellationToken);
+    }
+
+    /// <summary>
+    /// Represents the .aspire/settings.json file structure per schema.
+    /// </summary>
+    private sealed class AspireSettings
+    {
+        /// <summary>
+        /// The path to the AppHost project file.
+        /// </summary>
+        public string? AppHostPath { get; init; }
+
+        /// <summary>
+        /// The shared resources configuration.
+        /// </summary>
+        public RepositorySharedResources? SharedResources { get; init; }
     }
 
     /// <summary>

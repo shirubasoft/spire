@@ -45,20 +45,7 @@ public sealed class ResourceClearHandler
     {
         var globalResources = _getGlobalResources();
 
-        // Validate that specified IDs exist
-        if (ids is { Length: > 0 })
-        {
-            foreach (var id in ids)
-            {
-                if (!globalResources.ContainsResource(id))
-                {
-                    _console.MarkupLine($"[red]Error:[/] Resource '[yellow]{id}[/]' not found.");
-                    return 1;
-                }
-            }
-        }
-
-        // Check if we're in a git repository
+        // Check if we're in a git repository (need this before validation when includeRepo is true)
         string? repoPath = null;
         RepositorySharedResources? repoResources = null;
 
@@ -77,6 +64,22 @@ public sealed class ResourceClearHandler
             catch
             {
                 // Not in a git repository, or error reading - that's fine
+            }
+        }
+
+        // Validate that specified IDs exist in at least one location
+        if (ids is { Length: > 0 })
+        {
+            foreach (var id in ids)
+            {
+                var existsInGlobal = globalResources.ContainsResource(id);
+                var existsInRepo = repoResources?.ContainsResource(id) ?? false;
+
+                if (!existsInGlobal && !existsInRepo)
+                {
+                    _console.MarkupLine($"[red]Error:[/] Resource '[yellow]{id}[/]' not found.");
+                    return 1;
+                }
             }
         }
 
@@ -120,9 +123,10 @@ public sealed class ResourceClearHandler
             }
         }
 
-        // Clear from global config
-        var clearedGlobalCount = clearingAll ? globalResources.Count : ids!.Length;
-        var newGlobalResources = globalResources.ClearResources(ids);
+        // Clear from global config - only clear IDs that exist in global
+        var globalIdsToRemove = clearingAll ? null : ids!.Where(globalResources.ContainsResource).ToArray();
+        var clearedGlobalCount = clearingAll ? globalResources.Count : globalIdsToRemove!.Length;
+        var newGlobalResources = globalResources.ClearResources(globalIdsToRemove);
         await _writer.SaveGlobalAsync(newGlobalResources, cancellationToken);
         _console.MarkupLine($"[green]Cleared {clearedGlobalCount} resources from global config.[/]");
 

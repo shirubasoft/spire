@@ -28,18 +28,42 @@ public sealed class ResourceRemoveCommand : Command
     {
         Options.Add(ResourceOptions.Id);
         Options.Add(CommonOptions.Yes);
+
+        SetAction(async (parseResult, cancellationToken) =>
+        {
+            var id = parseResult.GetValue(ResourceOptions.Id) ?? string.Empty;
+            var yes = parseResult.GetValue(CommonOptions.Yes);
+
+            var console = AnsiConsole.Console;
+            var gitCliResolver = new GitCliResolver();
+            var gitService = new GitService(gitCliResolver);
+            var writer = new SharedResourcesWriter();
+            var repoReader = new RepositorySharedResourcesReader();
+
+            var handler = new ResourceRemoveHandler(
+                console,
+                writer,
+                repoReader,
+                gitService,
+                SharedResourcesConfigurationExtensions.GetSharedResources);
+
+            return await handler.ExecuteAsync(id, yes, cancellationToken);
+        });
     }
 
     /// <summary>
-    /// Initializes a new instance with handler dependencies.
+    /// Initializes a new instance with handler dependencies (for testing).
     /// </summary>
     public ResourceRemoveCommand(
         IAnsiConsole console,
         ISharedResourcesWriter writer,
         IRepositorySharedResourcesReader repoReader,
         IGitService gitService,
-        Func<GlobalSharedResources>? getGlobalResources = null) : this()
+        Func<GlobalSharedResources>? getGlobalResources = null) : base(name: CommandName, description: CommandDescription)
     {
+        Options.Add(ResourceOptions.Id);
+        Options.Add(CommonOptions.Yes);
+
         var handler = new ResourceRemoveHandler(
             console,
             writer,
