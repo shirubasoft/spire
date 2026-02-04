@@ -270,14 +270,12 @@ public sealed class BuildHandler
 
         _console.MarkupLine("  [green]Build completed.[/]");
 
-        // Apply all tags to the image
-        var sourceImage = string.IsNullOrEmpty(containerSettings.ImageRegistry)
-            ? $"{containerSettings.ImageName}:{tags.CommitTag}"
-            : $"{containerSettings.ImageRegistry}/{containerSettings.ImageName}:{tags.CommitTag}";
+        // Apply all tags to the image (dotnet publish creates the image without registry prefix)
+        var sourceImage = $"{containerSettings.ImageName}:{tags.LatestTag}";
 
         try
         {
-            await _containerImageService.TagImageAsync(sourceImage, [tags.BranchTag, tags.LatestTag], cancellationToken);
+            await _containerImageService.TagImageAsync(sourceImage, [tags.CommitTag, tags.BranchTag], cancellationToken);
         }
         catch (Exception ex)
         {

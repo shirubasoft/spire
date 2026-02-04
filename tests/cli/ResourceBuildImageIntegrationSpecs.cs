@@ -343,11 +343,11 @@ public class AllTagsAppliedIntegrationSpecs
 
         await Assert.That(result).IsEqualTo(0);
 
-        // Verify tagging was called with branch and latest tags
+        // Verify tagging was called with commit and branch tags using latest as source (no registry prefix)
         await containerService.Received(1).TagImageAsync(
-            "docker.io/my-api:abc1234",
+            "my-api:latest",
             Arg.Is<IEnumerable<string>>(tags =>
-                tags.Contains("feature-auth") && tags.Contains("latest")),
+                tags.Contains("abc1234") && tags.Contains("feature-auth")),
             Arg.Any<CancellationToken>());
 
         // Output should show all three tags were applied
