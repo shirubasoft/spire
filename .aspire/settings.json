@@ -1,0 +1,40 @@
+{
+  "appHostPath": "../sample/Sample.AppHost/Sample.AppHost.csproj",
+  "sharedResources": {
+    "resources": {
+      "sample-apiservice": {
+        "mode": "project",
+        "containerMode": {
+          "imageName": "sample-apiservice",
+          "imageRegistry": "docker.io",
+          "imageTag": "latest",
+          "buildCommand": "dotnet publish --os linux --arch x64 /t:PublishContainer",
+          "buildWorkingDirectory": "./sample/Sample.ApiService"
+        },
+        "projectMode": {
+          "projectDirectory": "./sample/Sample.ApiService"
+        }
+      },
+      "sample-web": {
+        "mode": "project",
+        "containerMode": {
+          "imageName": "sample-web",
+          "imageRegistry": "docker.io",
+          "imageTag": "latest",
+          "buildCommand": "dotnet publish --os linux --arch x64 /t:PublishContainer",
+          "buildWorkingDirectory": "./sample/Sample.Web"
+        },
+        "projectMode": {
+          "projectDirectory": "./sample/Sample.Web"
+        }
+      }
+    },
+    "externalResources": [
+      {
+        "url": "https://github.com/shirubasoft/spire-external-repo-sample",
+        "branch": "main"
+      }
+    ],
+    "count": 2
+  }
+}

@@ -1,0 +1,3 @@
+<Project>
+  <!-- Stop inheritance from the root Directory.Build.props -->
+</Project>
