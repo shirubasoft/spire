@@ -63,6 +63,8 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         "IResourceWithArgs",
         "IResourceWithEndpoints",
         "IResourceWithWaitSupport",
+        "IResourceWithProbes",
+        "IComputeResource",
     ];
 
     private static string GenerateResourceSource(string safeName, string resourceId, ResourceEntry resource)
@@ -75,18 +77,8 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("using Aspire.Hosting.ApplicationModel;");
         sb.AppendLine();
 
-        // Interface
-        sb.AppendLine($"public interface I{safeName}ResourceBuilder");
-        sb.AppendLine("{");
-        sb.AppendLine("    IResourceBuilder<IResource> Inner { get; }");
-        sb.AppendLine($"    I{safeName}ResourceBuilder ConfigureContainer(Action<IResourceBuilder<ContainerResource>> configure);");
-        sb.AppendLine($"    I{safeName}ResourceBuilder ConfigureProject(Action<IResourceBuilder<ProjectResource>> configure);");
-        sb.AppendLine($"    I{safeName}ResourceBuilder Configure<T>(Action<IResourceBuilder<T>> configure) where T : IResource;");
-        sb.AppendLine("}");
-        sb.AppendLine();
-
         // Builder class — implements IResourceBuilder<X> for each common interface
-        sb.Append($"public sealed class {safeName}ResourceBuilder : SharedResourceBuilder, I{safeName}ResourceBuilder");
+        sb.Append($"public sealed class {safeName}ResourceBuilder : SharedResourceBuilder");
         foreach (var iface in ResourceInterfaces)
         {
             sb.Append($", IResourceBuilder<{iface}>");
@@ -114,19 +106,19 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
             sb.AppendLine();
         }
 
-        sb.AppendLine($"    new public I{safeName}ResourceBuilder ConfigureContainer(Action<IResourceBuilder<ContainerResource>> configure)");
+        sb.AppendLine($"    new public {safeName}ResourceBuilder ConfigureContainer(Action<IResourceBuilder<ContainerResource>> configure)");
         sb.AppendLine("    {");
         sb.AppendLine("        base.ConfigureContainer(configure);");
         sb.AppendLine("        return this;");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"    new public I{safeName}ResourceBuilder ConfigureProject(Action<IResourceBuilder<ProjectResource>> configure)");
+        sb.AppendLine($"    new public {safeName}ResourceBuilder ConfigureProject(Action<IResourceBuilder<ProjectResource>> configure)");
         sb.AppendLine("    {");
         sb.AppendLine("        base.ConfigureProject(configure);");
         sb.AppendLine("        return this;");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"    new public I{safeName}ResourceBuilder Configure<T>(Action<IResourceBuilder<T>> configure) where T : IResource");
+        sb.AppendLine($"    new public {safeName}ResourceBuilder Configure<T>(Action<IResourceBuilder<T>> configure) where T : IResource");
         sb.AppendLine("    {");
         sb.AppendLine("        base.Configure(configure);");
         sb.AppendLine("        return this;");
@@ -137,7 +129,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         // Extension method
         sb.AppendLine($"public static class {safeName}ResourceExtensions");
         sb.AppendLine("{");
-        sb.AppendLine($"    public static I{safeName}ResourceBuilder Add{safeName}(this IDistributedApplicationBuilder builder)");
+        sb.AppendLine($"    public static {safeName}ResourceBuilder Add{safeName}(this IDistributedApplicationBuilder builder)");
         sb.AppendLine("    {");
         sb.AppendLine($"        var modeValue = builder.Configuration[\"resources:{resourceId}:mode\"];");
         sb.AppendLine("        var mode = string.Equals(modeValue, \"project\", System.StringComparison.OrdinalIgnoreCase)");
