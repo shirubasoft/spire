@@ -29,18 +29,44 @@ public sealed class ResourceClearCommand : Command
         Options.Add(ResourceOptions.ClearIds);
         Options.Add(ResourceOptions.IncludeRepo);
         Options.Add(CommonOptions.Yes);
+
+        SetAction(async (parseResult, cancellationToken) =>
+        {
+            var ids = parseResult.GetValue(ResourceOptions.ClearIds);
+            var includeRepo = parseResult.GetValue(ResourceOptions.IncludeRepo);
+            var yes = parseResult.GetValue(CommonOptions.Yes);
+
+            var console = AnsiConsole.Console;
+            var gitCliResolver = new GitCliResolver();
+            var gitService = new GitService(gitCliResolver);
+            var writer = new SharedResourcesWriter();
+            var repoReader = new RepositorySharedResourcesReader();
+
+            var handler = new ResourceClearHandler(
+                console,
+                writer,
+                repoReader,
+                gitService,
+                SharedResourcesConfigurationExtensions.GetSharedResources);
+
+            return await handler.ExecuteAsync(ids, includeRepo, yes, cancellationToken);
+        });
     }
 
     /// <summary>
-    /// Initializes a new instance with handler dependencies.
+    /// Initializes a new instance with handler dependencies (for testing).
     /// </summary>
     public ResourceClearCommand(
         IAnsiConsole console,
         ISharedResourcesWriter writer,
         IRepositorySharedResourcesReader repoReader,
         IGitService gitService,
-        Func<GlobalSharedResources>? getGlobalResources = null) : this()
+        Func<GlobalSharedResources>? getGlobalResources = null) : base(name: CommandName, description: CommandDescription)
     {
+        Options.Add(ResourceOptions.ClearIds);
+        Options.Add(ResourceOptions.IncludeRepo);
+        Options.Add(CommonOptions.Yes);
+
         var handler = new ResourceClearHandler(
             console,
             writer,
