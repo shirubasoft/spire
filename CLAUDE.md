@@ -24,7 +24,7 @@ Tests use **TUnit** with the **Microsoft.Testing.Platform** runner (configured i
 ```
 src/core/           Spire.csproj             Domain models (SharedResource, GlobalSharedResources, RepositorySharedResources)
 src/cli/            Spire.Cli.csproj         CLI tool (dotnet tool, command: "spire"), uses System.CommandLine
-src/hosting/        Spire.Hosting.csproj     Runtime types for Aspire AppHost (SharedResourceBuilder, ResourceMode)
+src/hosting/        Spire.Hosting.csproj     Runtime types for Aspire AppHost (SharedResource, SharedResourceBuilder<T>, ResourceMode)
 src/source-generator/ Spire.SourceGenerator.csproj  Roslyn IIncrementalGenerator (netstandard2.0, generates typed Add* methods)
 tests/              Mirrors src/ structure
 ```
@@ -65,10 +65,11 @@ Each command has a `*Command.cs` (defines args/options, wires handler) and a `*H
 
 `SharedResourceGenerator` (IIncrementalGenerator) reads `SharedResources.g.json` and generates per-resource:
 
-- `I{Name}ResourceBuilder` interface
-- `{Name}ResourceBuilder` class (extends `SharedResourceBuilder`)
-- `Add{Name}()` extension method on `IDistributedApplicationBuilder`
+- `{Name}Resource` class (extends `SharedResource`)
+- `Add{Name}()` extension method on `IDistributedApplicationBuilder` (returns `IResourceBuilder<{Name}Resource>`)
 - `{Name}ProjectMetadata` (if project path is known at build time)
+
+`SharedResourceBuilder<T>` is generic (`where T : SharedResource`), so per-resource types preserve `T` through Aspire extension method chains. `ConfigureContainer`/`ConfigureProject` are extension methods on `IResourceBuilder<T> where T : SharedResource` (in `SharedResourceExtensions.cs`), so they survive any Aspire method that returns `IResourceBuilder<T>`.
 
 The generator targets **netstandard2.0** and has global analyzers excluded via `Directory.Build.props` (`IsRoslynComponent` condition).
 

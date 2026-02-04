@@ -1,62 +1,36 @@
-using Aspire.Hosting;
 using Aspire.Hosting.ApplicationModel;
 
 namespace Aspire.Hosting;
 
 /// <summary>
 /// Wraps an <see cref="IResourceBuilder{T}"/> to provide mode-aware configuration.
+/// Implements <see cref="IResourceBuilder{T}"/> so that all Aspire extension
+/// methods (e.g. <c>WithHttpEndpoint</c>, <c>WaitFor</c>) work directly.
 /// </summary>
-public abstract class SharedResourceBuilder
+public class SharedResourceBuilder<T> : IResourceBuilder<T> where T : SharedResource
 {
     private readonly IResourceBuilder<IResource> _inner;
-    private readonly ResourceMode _mode;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="SharedResourceBuilder"/> class.
+    /// Initializes a new instance of the <see cref="SharedResourceBuilder{T}"/> class.
     /// </summary>
-    protected SharedResourceBuilder(IResourceBuilder<IResource> inner, ResourceMode mode)
+    public SharedResourceBuilder(IResourceBuilder<IResource> inner, T resource)
     {
         _inner = inner;
-        _mode = mode;
+        Resource = resource;
     }
 
-    /// <summary>
-    /// Gets the underlying resource builder.
-    /// </summary>
-    public IResourceBuilder<IResource> Inner => _inner;
+    /// <inheritdoc />
+    public T Resource { get; }
 
-    /// <summary>
-    /// Configures the resource only when running in container mode.
-    /// </summary>
-    public SharedResourceBuilder ConfigureContainer(Action<IResourceBuilder<ContainerResource>> configure)
+    /// <inheritdoc />
+    public IDistributedApplicationBuilder ApplicationBuilder => _inner.ApplicationBuilder;
+
+    /// <inheritdoc />
+    public IResourceBuilder<T> WithAnnotation<TAnnotation>(TAnnotation annotation, ResourceAnnotationMutationBehavior behavior)
+        where TAnnotation : IResourceAnnotation
     {
-        if (_mode == ResourceMode.Container)
-        {
-            configure((IResourceBuilder<ContainerResource>)_inner);
-        }
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the resource only when running in project mode.
-    /// </summary>
-    public SharedResourceBuilder ConfigureProject(Action<IResourceBuilder<ProjectResource>> configure)
-    {
-        if (_mode == ResourceMode.Project)
-        {
-            configure((IResourceBuilder<ProjectResource>)_inner);
-        }
-
-        return this;
-    }
-
-    /// <summary>
-    /// Configures the resource regardless of mode.
-    /// </summary>
-    public SharedResourceBuilder Configure<T>(Action<IResourceBuilder<T>> configure) where T : IResource
-    {
-        configure((IResourceBuilder<T>)_inner);
+        _inner.WithAnnotation(annotation, behavior);
         return this;
     }
 }
