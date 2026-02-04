@@ -113,14 +113,14 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("        if (mode == ResourceMode.Project)");
         sb.AppendLine("        {");
 
-        var projectPath = resource.ProjectMode?.ProjectDirectory;
+        var projectPath = resource.ProjectMode?.ProjectPath;
         if (!string.IsNullOrEmpty(projectPath))
         {
             sb.AppendLine($"            inner = builder.AddProject<{safeName}ProjectMetadata>(\"{resourceId}\");");
         }
         else
         {
-            sb.AppendLine($"            var projectPath = builder.Configuration[\"resources:{resourceId}:projectMode:projectDirectory\"];");
+            sb.AppendLine($"            var projectPath = builder.Configuration[\"resources:{resourceId}:projectMode:projectPath\"];");
             sb.AppendLine($"            inner = builder.AddProject(\"{resourceId}\", projectPath);");
         }
 
@@ -236,6 +236,6 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
 
     private sealed class ProjectModeEntry
     {
-        public string ProjectDirectory { get; set; }
+        public string ProjectPath { get; set; }
     }
 }

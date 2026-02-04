@@ -134,7 +134,7 @@ public class NoContainerSettingsSpecs
                     ContainerMode = null,
                     ProjectMode = new ProjectModeSettings
                     {
-                        ProjectDirectory = "/app"
+                        ProjectPath = "/app/app.csproj"
                     },
                     GitRepository = null
                 }
@@ -820,7 +820,7 @@ public class BuildAllSkipsNonBuildableSpecs
                     ContainerMode = null,
                     ProjectMode = new ProjectModeSettings
                     {
-                        ProjectDirectory = "/app-b"
+                        ProjectPath = "/app-b/app-b.csproj"
                     },
                     GitRepository = null
                 }

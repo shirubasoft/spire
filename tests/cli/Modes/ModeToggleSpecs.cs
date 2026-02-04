@@ -65,7 +65,7 @@ public class ModeToggleSpecs
 
     private static ProjectModeSettings CreateProjectSettings() => new()
     {
-        ProjectDirectory = "/path/to/project"
+        ProjectPath = "/path/to/project.csproj"
     };
 
     private static GitRepositorySettings CreateGitSettings() => new()

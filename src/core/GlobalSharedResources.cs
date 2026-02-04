@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace Spire;
 
@@ -14,6 +15,12 @@ public sealed record GlobalSharedResources
     public static readonly GlobalSharedResources Empty = new() { Resources = [] };
 
     /// <summary>
+    /// The JSON schema reference for this configuration file.
+    /// </summary>
+    [JsonPropertyName("$schema")]
+    public string? Schema { get; init; }
+
+    /// <summary>
     /// A map of resource ID to resource definition.
     /// </summary>
     public required Dictionary<string, SharedResource> Resources { get; init; }
@@ -21,6 +28,7 @@ public sealed record GlobalSharedResources
     /// <summary>
     /// Gets the number of resources in this instance.
     /// </summary>
+    [JsonIgnore]
     public int Count => Resources.Count;
 
     /// <summary>

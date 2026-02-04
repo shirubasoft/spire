@@ -37,13 +37,13 @@
     "projectModeSettings": {
       "type": "object",
       "properties": {
-        "projectDirectory": {
+        "projectPath": {
           "type": "string",
-          "description": "The path to the project directory.",
+          "description": "The path to the project file (.csproj).",
           "minLength": 1
         }
       },
-      "required": ["projectDirectory"],
+      "required": ["projectPath"],
       "additionalProperties": false
     },
     "gitRepositorySettings": {
@@ -110,7 +110,7 @@
                 { "$ref": "#/$defs/projectModeSettings" },
                 {
                   "properties": {
-                    "projectDirectory": { "$ref": "#/$defs/absolutePath" }
+                    "projectPath": { "$ref": "#/$defs/absolutePath" }
                   }
                 }
               ]
@@ -142,7 +142,7 @@
                 { "$ref": "#/$defs/projectModeSettings" },
                 {
                   "properties": {
-                    "projectDirectory": { "$ref": "#/$defs/relativePath" }
+                    "projectPath": { "$ref": "#/$defs/relativePath" }
                   }
                 }
               ]
@@ -220,6 +220,9 @@
       "type": "object",
       "description": "Aspire AppHost settings (.aspire/settings.json) extended with shared resource definitions. Paths in sharedResources are relative to the repository root.",
       "properties": {
+        "$schema": {
+          "type": "string"
+        },
         "appHostPath": {
           "type": "string",
           "description": "The path to the AppHost project file."

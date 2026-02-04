@@ -163,7 +163,7 @@ public class RepositorySharedResourcesReaderSpecs
                         "api": {
                             "mode": "project",
                             "projectMode": {
-                                "projectDirectory": "./src/Api"
+                                "projectPath": "./src/Api/Api.csproj"
                             }
                         }
                     }

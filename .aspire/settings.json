@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/aspire-settings.schema.json",
   "appHostPath": "../sample/Sample.AppHost/Sample.AppHost.csproj",
   "sharedResources": {
     "resources": {
@@ -12,7 +13,7 @@
           "buildWorkingDirectory": "./sample/Sample.ApiService"
         },
         "projectMode": {
-          "projectDirectory": "./sample/Sample.ApiService"
+          "projectPath": "./sample/Sample.ApiService/Sample.ApiService.csproj"
         }
       },
       "sample-web": {
@@ -25,7 +26,7 @@
           "buildWorkingDirectory": "./sample/Sample.Web"
         },
         "projectMode": {
-          "projectDirectory": "./sample/Sample.Web"
+          "projectPath": "./sample/Sample.Web/Sample.Web.csproj"
         }
       }
     },
@@ -34,7 +35,6 @@
         "url": "https://github.com/shirubasoft/spire-external-repo-sample",
         "branch": "main"
       }
-    ],
-    "count": 2
+    ]
   }
 }

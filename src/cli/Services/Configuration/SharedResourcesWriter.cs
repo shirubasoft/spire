@@ -13,6 +13,9 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
     private const string RepositorySettingsDirectory = ".aspire";
     private const string RepositorySettingsFileName = "settings.json";
 
+    private const string GlobalSchemaUrl = "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/shared-resources-global.schema.json";
+    private const string AspireSettingsSchemaUrl = "https://raw.githubusercontent.com/shirubasoft/spire/main/schemas/aspire-settings.schema.json";
+
     private static readonly JsonSerializerOptions WriteOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -40,7 +43,8 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
             Directory.CreateDirectory(directory);
         }
 
-        var json = JsonSerializer.Serialize(resources, WriteOptions);
+        var withSchema = resources with { Schema = GlobalSchemaUrl };
+        var json = JsonSerializer.Serialize(withSchema, WriteOptions);
         await File.WriteAllTextAsync(configPath, json, cancellationToken);
     }
 
@@ -70,6 +74,7 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
         // Wrap in AspireSettings structure per schema
         var aspireSettings = new AspireSettings
         {
+            Schema = AspireSettingsSchemaUrl,
             AppHostPath = existingAppHostPath,
             SharedResources = resources
         };
@@ -83,6 +88,12 @@ public sealed class SharedResourcesWriter : ISharedResourcesWriter
     /// </summary>
     private sealed class AspireSettings
     {
+        /// <summary>
+        /// The JSON schema reference for this configuration file.
+        /// </summary>
+        [JsonPropertyName("$schema")]
+        public string? Schema { get; init; }
+
         /// <summary>
         /// The path to the AppHost project file.
         /// </summary>

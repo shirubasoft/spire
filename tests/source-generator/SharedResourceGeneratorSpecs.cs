@@ -263,6 +263,60 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(generatedSources).IsEmpty();
     }
 
+    [Test]
+    public async Task ResourceWithProjectPath_GeneratesProjectMetadataWithCsprojPath()
+    {
+        // Arrange
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "project",
+                        "projectMode": {
+                            "projectPath": "/path/to/MyService/MyService.csproj"
+                        }
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("MyServiceProjectMetadata");
+        await Assert.That(sourceText).Contains("ProjectPath => \"/path/to/MyService/MyService.csproj\"");
+    }
+
+    [Test]
+    public async Task ResourceWithProjectPath_UsesProjectPathConfigKey()
+    {
+        // Arrange - resource without a known project path at build time
+        const string json = """
+            {
+                "resources": {
+                    "my-service": {
+                        "mode": "project"
+                    }
+                }
+            }
+            """;
+
+        // Act
+        var generatedSources = RunGenerator(json);
+
+        // Assert
+        var resourceSource = generatedSources.FirstOrDefault(s => s.HintName == "MyService.g.cs");
+        await Assert.That(resourceSource).IsNotNull();
+
+        var sourceText = resourceSource!.SourceText.ToString();
+        await Assert.That(sourceText).Contains("projectMode:projectPath");
+    }
+
     private static ImmutableArray<GeneratedSourceResult> RunGenerator(string json)
     {
         var generator = new SharedResourceGenerator();

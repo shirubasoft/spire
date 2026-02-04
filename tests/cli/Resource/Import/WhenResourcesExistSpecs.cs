@@ -45,7 +45,7 @@ public class WhenResourcesExistSpecs
                 },
                 ProjectMode = new ProjectModeSettings
                 {
-                    ProjectDirectory = "./src/MyService"
+                    ProjectPath = "./src/MyService/MyService.csproj"
                 },
                 GitRepository = null
             }
@@ -101,7 +101,7 @@ public class WhenResourcesExistSpecs
                 },
                 ProjectMode = new ProjectModeSettings
                 {
-                    ProjectDirectory = "./src/ExistingService"
+                    ProjectPath = "./src/ExistingService/ExistingService.csproj"
                 },
                 GitRepository = null
             }
@@ -153,7 +153,7 @@ public class WhenResourcesExistSpecs
                 },
                 ProjectMode = new ProjectModeSettings
                 {
-                    ProjectDirectory = "./src/MyService"
+                    ProjectPath = "./src/MyService/MyService.csproj"
                 },
                 GitRepository = null
             }
@@ -177,7 +177,7 @@ public class WhenResourcesExistSpecs
         await Assert.That(capturedResources).IsNotNull();
         await Assert.That(capturedResources!.Resources["my-service"].ContainerMode!.BuildWorkingDirectory)
             .IsEqualTo("/test/repo/src/MyService");
-        await Assert.That(capturedResources.Resources["my-service"].ProjectMode!.ProjectDirectory)
-            .IsEqualTo("/test/repo/src/MyService");
+        await Assert.That(capturedResources.Resources["my-service"].ProjectMode!.ProjectPath)
+            .IsEqualTo("/test/repo/src/MyService/MyService.csproj");
     }
 }
