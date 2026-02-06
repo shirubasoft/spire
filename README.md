@@ -80,6 +80,33 @@ All resource commands operate on **both** `.aspire/settings.json` and the global
 | `~/.aspire/spire/aspire-shared-resources.json` | Global config aggregating all resources — absolute paths |
 | `~/.aspire/spire/{repo-slug}/aspire-shared-resources.json` | Repository-scoped overrides — absolute paths (CLI only) |
 
+### MSBuild Properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `SkipSharedResourceResolution` | `false` | Skip all Spire MSBuild targets (CLI checks, import, source generation) |
+| `SpireAutoInstallCli` | `false` | Automatically install/update the `spire` CLI tool at build time |
+
+## Installation
+
+Install the Spire CLI as a global .NET tool:
+
+```bash
+dotnet tool install -g spire.cli
+```
+
+### Automatic CLI Install
+
+If you'd prefer the CLI to be installed (or updated) automatically at build time, set the `SpireAutoInstallCli` property in your AppHost project:
+
+```xml
+<PropertyGroup>
+  <SpireAutoInstallCli>true</SpireAutoInstallCli>
+</PropertyGroup>
+```
+
+When enabled, the build will run `dotnet tool install -g spire.cli` before checking CLI availability. If the install fails (e.g., no network), the build continues and falls back to the normal availability check.
+
 ## Requirements
 
 - .NET 10.0 or later
