@@ -1,6 +1,4 @@
-using System.Collections.Immutable;
 using System.Text;
-using System.Text.Json;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
@@ -28,8 +26,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
             if (string.IsNullOrWhiteSpace(json))
                 return;
 
-            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            var config = JsonSerializer.Deserialize<SharedResourcesConfig>(json, options);
+            var config = InterceptorHelpers.ParseConfig(json);
             if (config?.Resources is null)
                 return;
 
@@ -41,7 +38,7 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
                 if (string.IsNullOrEmpty(id))
                     continue;
 
-                var safeName = ToSafeIdentifier(id);
+                var safeName = InterceptorHelpers.ToSafeIdentifier(id);
                 var source = GenerateResourceSource(safeName, id, resource);
 
                 ctx.AddSource($"{safeName}.g.cs", SourceText.From(source, Encoding.UTF8));
@@ -176,52 +173,5 @@ public sealed class SharedResourceGenerator : IIncrementalGenerator
         sb.AppendLine("}");
 
         return sb.ToString();
-    }
-
-    private static string ToSafeIdentifier(string name)
-    {
-        var sb = new StringBuilder();
-        var capitalizeNext = true;
-
-        foreach (var c in name)
-        {
-            if (char.IsLetterOrDigit(c))
-            {
-                sb.Append(capitalizeNext ? char.ToUpperInvariant(c) : c);
-                capitalizeNext = false;
-            }
-            else
-            {
-                capitalizeNext = true;
-            }
-        }
-
-        return sb.ToString();
-    }
-
-    private sealed class SharedResourcesConfig
-    {
-        public Dictionary<string, ResourceEntry> Resources { get; set; }
-    }
-
-    private sealed class ResourceEntry
-    {
-        public string Mode { get; set; }
-        public ContainerModeEntry ContainerMode { get; set; }
-        public ProjectModeEntry ProjectMode { get; set; }
-    }
-
-    private sealed class ContainerModeEntry
-    {
-        public string ImageName { get; set; }
-        public string ImageRegistry { get; set; }
-        public string ImageTag { get; set; }
-        public string BuildCommand { get; set; }
-        public string BuildWorkingDirectory { get; set; }
-    }
-
-    private sealed class ProjectModeEntry
-    {
-        public string ProjectPath { get; set; }
     }
 }
