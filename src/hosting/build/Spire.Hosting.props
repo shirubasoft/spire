@@ -4,6 +4,7 @@
     <EnableSdkContainerSupport>true</EnableSdkContainerSupport>
     <ContainerRepository Condition="'$(ContainerRepository)' == ''">$(AssemblyName)</ContainerRepository>
     <SkipSharedResourceResolution Condition="'$(SkipSharedResourceResolution)' == ''">false</SkipSharedResourceResolution>
+    <SpireAutoInstallCli Condition="'$(SpireAutoInstallCli)' == ''">false</SpireAutoInstallCli>
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Spire.Hosting.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 

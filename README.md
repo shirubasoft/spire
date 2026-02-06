@@ -63,14 +63,14 @@ All resource commands operate on **both** `.aspire/settings.json` and the global
 
 | Command | Description |
 |---------|-------------|
+| `spire build` | Build container images for shared resources |
 | `spire resource generate <path>` | Generate `.aspire/settings.json` from existing projects/containers |
 | `spire resource import` | Import resources from `.aspire/settings.json` in the current git repo |
 | `spire resource list` | Show all registered resources |
-| `spire resource info <id>` | Show detailed info for a resource |
-| `spire resource remove <id>` | Remove a resource from JSON and global config |
+| `spire resource info --id <id>` | Show detailed info for a resource |
+| `spire resource remove --id <id>` | Remove a resource from JSON and global config |
 | `spire resource clear` | Clear resources from JSON and global config |
 | `spire modes` | Toggle Project/Container mode for resources |
-| `spire override` | Set runtime overrides (mode, registry rewrites, image rewrites) |
 
 ## Configuration
 
@@ -79,6 +79,33 @@ All resource commands operate on **both** `.aspire/settings.json` and the global
 | `.aspire/settings.json` | Per-repository resource definitions — relative paths (version controlled) |
 | `~/.aspire/spire/aspire-shared-resources.json` | Global config aggregating all resources — absolute paths |
 | `~/.aspire/spire/{repo-slug}/aspire-shared-resources.json` | Repository-scoped overrides — absolute paths (CLI only) |
+
+### MSBuild Properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `SkipSharedResourceResolution` | `false` | Skip all Spire MSBuild targets (CLI checks, import, source generation) |
+| `SpireAutoInstallCli` | `false` | Automatically install/update the `spire` CLI tool at build time |
+
+## Installation
+
+Install the Spire CLI as a global .NET tool:
+
+```bash
+dotnet tool install -g spire.cli
+```
+
+### Automatic CLI Install
+
+If you'd prefer the CLI to be installed (or updated) automatically at build time, set the `SpireAutoInstallCli` property in your AppHost project:
+
+```xml
+<PropertyGroup>
+  <SpireAutoInstallCli>true</SpireAutoInstallCli>
+</PropertyGroup>
+```
+
+When enabled, the build will run `dotnet tool install -g spire.cli` before checking CLI availability. If the install fails (e.g., no network), the build continues and falls back to the normal availability check.
 
 ## Requirements
 

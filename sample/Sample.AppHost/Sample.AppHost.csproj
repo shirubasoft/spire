@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>5b3d957a-ddcc-475e-b5ac-f20436ba18f4</UserSecretsId>
+    <SpireAutoInstallCli>true</SpireAutoInstallCli>
   </PropertyGroup>
 
   <ItemGroup>
