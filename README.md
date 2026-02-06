@@ -63,14 +63,14 @@ All resource commands operate on **both** `.aspire/settings.json` and the global
 
 | Command | Description |
 |---------|-------------|
+| `spire build` | Build container images for shared resources |
 | `spire resource generate <path>` | Generate `.aspire/settings.json` from existing projects/containers |
 | `spire resource import` | Import resources from `.aspire/settings.json` in the current git repo |
 | `spire resource list` | Show all registered resources |
-| `spire resource info <id>` | Show detailed info for a resource |
-| `spire resource remove <id>` | Remove a resource from JSON and global config |
+| `spire resource info --id <id>` | Show detailed info for a resource |
+| `spire resource remove --id <id>` | Remove a resource from JSON and global config |
 | `spire resource clear` | Clear resources from JSON and global config |
 | `spire modes` | Toggle Project/Container mode for resources |
-| `spire override` | Set runtime overrides (mode, registry rewrites, image rewrites) |
 
 ## Configuration
 
