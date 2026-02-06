@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AssemblyName>Spire.Core</AssemblyName>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
 </Project>
