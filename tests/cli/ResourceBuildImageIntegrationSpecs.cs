@@ -59,6 +59,10 @@ public class DotnetProjectBuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io/myorg", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-api", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -131,6 +135,10 @@ public class DockerfileBuildIntegrationSpecs
 
         containerService.TagExistsAsync("docker.io/myorg", "postgres-db", "def5678", Arg.Any<CancellationToken>())
             .Returns(false);
+
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "postgres-db", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
@@ -277,6 +285,10 @@ public class ForceRebuildIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-api", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -347,6 +359,10 @@ public class AllTagsAppliedIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-api", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -363,17 +379,18 @@ public class AllTagsAppliedIntegrationSpecs
 
         await Assert.That(result).IsEqualTo(0);
 
-        // Verify tagging was called with commit and branch tags using latest as source (no registry prefix)
+        // Verify tagging was called with full registry target and all three tags
         await containerService.Received(1).TagImageAsync(
             "my-api:latest",
+            "docker.io/my-api",
             Arg.Is<IEnumerable<string>>(tags =>
-                tags.Contains("abc1234") && tags.Contains("feature-auth")),
+                tags.Contains("abc1234") && tags.Contains("feature-auth") && tags.Contains("latest")),
             Arg.Any<CancellationToken>());
 
-        // Output should show all three tags were applied
-        await Assert.That(console.Output).Contains("abc1234");
-        await Assert.That(console.Output).Contains("feature-auth");
-        await Assert.That(console.Output).Contains("latest");
+        // Output should show all three tags with full registry path
+        await Assert.That(console.Output).Contains("docker.io/my-api:abc1234");
+        await Assert.That(console.Output).Contains("docker.io/my-api:feature-auth");
+        await Assert.That(console.Output).Contains("docker.io/my-api:latest");
     }
 }
 
@@ -425,6 +442,10 @@ public class DirtyRepositoryIntegrationSpecs
         containerService.TagExistsAsync("docker.io", "my-api", "abc1234-dirty", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-api", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -441,8 +462,8 @@ public class DirtyRepositoryIntegrationSpecs
 
         await Assert.That(result).IsEqualTo(0);
 
-        // Output should contain dirty suffix
-        await Assert.That(console.Output).Contains("abc1234-dirty");
-        await Assert.That(console.Output).Contains("main-dirty");
+        // Output should contain dirty suffix with full registry path
+        await Assert.That(console.Output).Contains("docker.io/my-api:abc1234-dirty");
+        await Assert.That(console.Output).Contains("docker.io/my-api:main-dirty");
     }
 }

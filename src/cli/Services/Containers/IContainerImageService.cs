@@ -31,10 +31,11 @@ public interface IContainerImageService
     Task<bool> TagExistsAsync(string registry, string imageName, string tag, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Tags an existing image with additional tags.
+    /// Tags an existing image with additional tags under a target base image name.
     /// </summary>
-    /// <param name="sourceImage">The full source image reference (e.g., "registry/name:tag").</param>
-    /// <param name="tags">The tags to apply to the image.</param>
+    /// <param name="sourceImage">The full source image reference (e.g., "name:tag" or "registry/name:tag").</param>
+    /// <param name="targetBaseImage">The target base image name including registry (e.g., "registry/name").</param>
+    /// <param name="tags">The tags to apply to the target base image.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    Task TagImageAsync(string sourceImage, IEnumerable<string> tags, CancellationToken cancellationToken);
+    Task TagImageAsync(string sourceImage, string targetBaseImage, IEnumerable<string> tags, CancellationToken cancellationToken);
 }
