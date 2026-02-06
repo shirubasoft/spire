@@ -461,8 +461,8 @@ public class SharedResourceGeneratorSpecs
         await Assert.That(resourceSource).IsNotNull();
 
         var sourceText = resourceSource!.SourceText.ToString();
-        await Assert.That(sourceText).Contains("WithParentRelationship(sync)");
-        await Assert.That(sourceText).Contains("WaitForCompletion(sync)");
+        await Assert.That(sourceText).Contains("sync.WithParentRelationship(containerBuilder)");
+        await Assert.That(sourceText).Contains("containerBuilder.WaitForCompletion(sync)");
     }
 
     [Test]

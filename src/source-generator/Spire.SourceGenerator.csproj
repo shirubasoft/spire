@@ -7,6 +7,7 @@
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <IsRoslynComponent>true</IsRoslynComponent>
     <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);RSEXPERIMENTAL002</NoWarn>
     <Description>Source generator for Spire shared resource references.</Description>
   </PropertyGroup>
 
