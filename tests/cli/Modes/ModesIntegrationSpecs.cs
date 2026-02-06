@@ -61,10 +61,7 @@ public class ModesIntegrationSpecs : IAsyncDisposable
 
         var console = new TestConsole();
         console.Interactive();
-        // Exit immediately
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.Enter);
+        console.Input.PushKey(ConsoleKey.Enter); // Confirm immediately
 
         var writer = new TestSharedResourcesWriter(configPath);
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
@@ -77,8 +74,8 @@ public class ModesIntegrationSpecs : IAsyncDisposable
 
         // Assert
         await Assert.That(result).IsEqualTo(0);
-        await Assert.That(console.Output).Contains("[Container] postgres");
-        await Assert.That(console.Output).Contains("[Project] my-service");
+        await Assert.That(console.Output).Contains("postgres");
+        await Assert.That(console.Output).Contains("my-service");
     }
 
     [Test]
@@ -89,11 +86,8 @@ public class ModesIntegrationSpecs : IAsyncDisposable
 
         var console = new TestConsole();
         console.Interactive();
-        // Toggle postgres then exit
-        console.Input.PushKey(ConsoleKey.Enter);       // Select postgres
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.Enter);       // Exit
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle postgres
+        console.Input.PushKey(ConsoleKey.Enter);    // Confirm
 
         var writer = new TestSharedResourcesWriter(configPath);
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();

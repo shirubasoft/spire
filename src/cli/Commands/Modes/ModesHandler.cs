@@ -13,8 +13,6 @@ public sealed class ModesHandler
     private readonly ISharedResourcesWriter _writer;
     private readonly IGlobalSharedResourcesReader _globalReader;
 
-    private const string ExitOption = "Exit";
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ModesHandler"/> class.
     /// </summary>
@@ -33,6 +31,7 @@ public sealed class ModesHandler
 
     /// <summary>
     /// Executes the modes command in interactive mode.
+    /// Uses Space to toggle modes and Enter to confirm changes.
     /// </summary>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>The exit code.</returns>
@@ -46,39 +45,72 @@ public sealed class ModesHandler
             return 0;
         }
 
-        while (!cancellationToken.IsCancellationRequested)
+        var resourceIds = resources.Resources.Keys.ToList();
+        var modes = resources.Resources.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Mode);
+        var originalModes = new Dictionary<string, Mode>(modes);
+        var selectedIndex = 0;
+        var confirmed = false;
+
+        await _console.Live(BuildRenderable(resourceIds, modes, selectedIndex))
+            .AutoClear(true)
+            .StartAsync(async ctx =>
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    ctx.UpdateTarget(BuildRenderable(resourceIds, modes, selectedIndex));
+                    ctx.Refresh();
+
+                    var keyInfo = await _console.Input.ReadKeyAsync(true, cancellationToken);
+                    if (keyInfo is null) break;
+
+                    switch (keyInfo.Value.Key)
+                    {
+                        case ConsoleKey.UpArrow:
+                            if (selectedIndex > 0) selectedIndex--;
+                            break;
+                        case ConsoleKey.DownArrow:
+                            if (selectedIndex < resourceIds.Count - 1) selectedIndex++;
+                            break;
+                        case ConsoleKey.Spacebar:
+                            modes[resourceIds[selectedIndex]] = ToggleMode(modes[resourceIds[selectedIndex]]);
+                            break;
+                        case ConsoleKey.Enter:
+                            confirmed = true;
+                            return;
+                        case ConsoleKey.Escape:
+                            return;
+                    }
+                }
+            });
+
+        if (!confirmed)
         {
-            resources = await _globalReader.GetSharedResourcesAsync(cancellationToken);
-            var choices = resources.Resources
-                .Select(kvp => FormatChoice(kvp.Key, kvp.Value.Mode))
-                .ToList();
-            choices.Add(ExitOption);
+            _console.MarkupLine("[yellow]No changes saved.[/]");
+            return 0;
+        }
 
-            var choice = _console.Prompt(
-                new SelectionPrompt<string>()
-                    .Title("Select a resource to toggle mode:")
-                    .AddChoices(choices));
+        var modifiedIds = modes
+            .Where(kvp => kvp.Value != originalModes[kvp.Key])
+            .Select(kvp => kvp.Key)
+            .ToList();
 
-            if (choice == ExitOption)
-            {
-                return 0;
-            }
+        if (modifiedIds.Count == 0)
+        {
+            _console.MarkupLine("[yellow]No changes made.[/]");
+            return 0;
+        }
 
-            var resourceId = ParseResourceId(choice);
-            if (resourceId is null || !resources.Resources.TryGetValue(resourceId, out var resource))
-            {
-                _console.MarkupLine($"[red]Resource not found.[/]");
-                return 1;
-            }
+        var updatedResources = resources;
+        foreach (var id in modifiedIds)
+        {
+            updatedResources = updatedResources.UpdateResource(id, resources.Resources[id].WithMode(modes[id]));
+        }
 
-            var oldMode = resource.Mode;
-            var newMode = ToggleMode(oldMode);
-            var updatedResource = resource.WithMode(newMode);
-            var updatedResources = resources.UpdateResource(resourceId, updatedResource);
+        await _writer.SaveGlobalAsync(updatedResources, cancellationToken);
 
-            await _writer.SaveGlobalAsync(updatedResources, cancellationToken);
-
-            _console.MarkupLine($"[green]Toggled '{resourceId}' from {oldMode} to {newMode}.[/]");
+        foreach (var id in modifiedIds)
+        {
+            _console.MarkupLine($"[green]Toggled '{id}' from {originalModes[id]} to {modes[id]}.[/]");
         }
 
         return 0;
@@ -117,23 +149,24 @@ public sealed class ModesHandler
         return 0;
     }
 
-    // Using escaped brackets for Spectre.Console markup: [[ and ]]
-    private static string FormatChoice(string id, Mode mode) => $"[[{mode}]] {id}";
-
-    private static string? ParseResourceId(string choice)
+    private static Rows BuildRenderable(List<string> resourceIds, Dictionary<string, Mode> modes, int selectedIndex)
     {
-        // Format is "[[Mode]] id" (with escaped brackets)
-        // Spectre.Console will render this as "[Mode] id"
-        var closingBracket = choice.IndexOf("]]");
-
-        // Skip "]] " (2 chars for ]] plus 1 for space = 3 chars) to get the resource id
-        const int offsetAfterBrackets = 3;
-        if (closingBracket < 0 || closingBracket + offsetAfterBrackets >= choice.Length)
+        var rows = new List<Markup>
         {
-            return null;
+            new("[bold]Toggle modes[/] [dim](Space=toggle, Enter=confirm, Esc=cancel)[/]"),
+            new("")
+        };
+
+        for (var i = 0; i < resourceIds.Count; i++)
+        {
+            var id = resourceIds[i];
+            var mode = modes[id];
+            rows.Add(i == selectedIndex
+                ? new Markup($"> [blue bold][[{mode}]][/] {Markup.Escape(id)}")
+                : new Markup($"  [[{mode}]] {Markup.Escape(id)}"));
         }
 
-        return choice[(closingBracket + offsetAfterBrackets)..].Trim();
+        return new Rows(rows);
     }
 
     /// <summary>

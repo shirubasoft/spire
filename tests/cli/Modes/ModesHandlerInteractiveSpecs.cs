@@ -3,7 +3,6 @@ using NSubstitute;
 using Spectre.Console.Testing;
 
 using Spire.Cli.Services.Configuration;
-using Spire.Cli.Services.Git;
 
 namespace Spire.Cli.Tests.Modes;
 
@@ -18,10 +17,7 @@ public class ModesHandlerInteractiveSpecs
         // Arrange
         var console = new TestConsole();
         console.Interactive();
-        // Navigate down to Exit and select
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.Enter);
+        console.Input.PushKey(ConsoleKey.Enter); // Confirm immediately
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
@@ -35,8 +31,10 @@ public class ModesHandlerInteractiveSpecs
 
         // Assert
         await Assert.That(result).IsEqualTo(0);
-        await Assert.That(console.Output).Contains("[Container] postgres");
-        await Assert.That(console.Output).Contains("[Project] my-service");
+        await Assert.That(console.Output).Contains("[Container]");
+        await Assert.That(console.Output).Contains("postgres");
+        await Assert.That(console.Output).Contains("[Project]");
+        await Assert.That(console.Output).Contains("my-service");
     }
 
     [Test]
@@ -45,11 +43,8 @@ public class ModesHandlerInteractiveSpecs
         // Arrange
         var console = new TestConsole();
         console.Interactive();
-        // Select first resource (postgres), then Exit
-        console.Input.PushKey(ConsoleKey.Enter);       // Select postgres (Container -> Project)
-        console.Input.PushKey(ConsoleKey.DownArrow);   // Navigate to second
-        console.Input.PushKey(ConsoleKey.DownArrow);   // Navigate to Exit
-        console.Input.PushKey(ConsoleKey.Enter);       // Select Exit
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle postgres (Container -> Project)
+        console.Input.PushKey(ConsoleKey.Enter);    // Confirm
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         GlobalSharedResources? savedResources = null;
@@ -78,11 +73,8 @@ public class ModesHandlerInteractiveSpecs
         // Arrange
         var console = new TestConsole();
         console.Interactive();
-        // Toggle first resource, then exit
-        console.Input.PushKey(ConsoleKey.Enter);       // Select first
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.Enter);       // Exit
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle first resource
+        console.Input.PushKey(ConsoleKey.Enter);    // Confirm
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
@@ -99,15 +91,13 @@ public class ModesHandlerInteractiveSpecs
     }
 
     [Test]
-    public async Task Execute_Interactive_ExitDoesNotSave()
+    public async Task Execute_Interactive_EscapeDoesNotSave()
     {
         // Arrange
         var console = new TestConsole();
         console.Interactive();
-        // Go directly to Exit (last option)
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.DownArrow);
-        console.Input.PushKey(ConsoleKey.Enter);
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle a resource
+        console.Input.PushKey(ConsoleKey.Escape);   // Cancel without saving
 
         var writer = Substitute.For<ISharedResourcesWriter>();
         var resources = CreateTestResources();
@@ -122,6 +112,89 @@ public class ModesHandlerInteractiveSpecs
         // Assert
         await Assert.That(result).IsEqualTo(0);
         await writer.DidNotReceive().SaveGlobalAsync(Arg.Any<GlobalSharedResources>(), Arg.Any<CancellationToken>());
+        await Assert.That(console.Output).Contains("No changes saved");
+    }
+
+    [Test]
+    public async Task Execute_Interactive_ConfirmWithNoChanges_DoesNotSave()
+    {
+        // Arrange
+        var console = new TestConsole();
+        console.Interactive();
+        console.Input.PushKey(ConsoleKey.Enter); // Confirm immediately without toggling
+
+        var writer = Substitute.For<ISharedResourcesWriter>();
+        var resources = CreateTestResources();
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
+
+        // Act
+        var result = await handler.ExecuteInteractiveAsync();
+
+        // Assert
+        await Assert.That(result).IsEqualTo(0);
+        await writer.DidNotReceive().SaveGlobalAsync(Arg.Any<GlobalSharedResources>(), Arg.Any<CancellationToken>());
+        await Assert.That(console.Output).Contains("No changes made");
+    }
+
+    [Test]
+    public async Task Execute_Interactive_TogglesMultipleResources()
+    {
+        // Arrange
+        var console = new TestConsole();
+        console.Interactive();
+        console.Input.PushKey(ConsoleKey.Spacebar);  // Toggle postgres (Container -> Project)
+        console.Input.PushKey(ConsoleKey.DownArrow);  // Navigate to my-service
+        console.Input.PushKey(ConsoleKey.Spacebar);  // Toggle my-service (Project -> Container)
+        console.Input.PushKey(ConsoleKey.Enter);     // Confirm
+
+        var writer = Substitute.For<ISharedResourcesWriter>();
+        GlobalSharedResources? savedResources = null;
+        writer.SaveGlobalAsync(Arg.Do<GlobalSharedResources>(r => savedResources = r), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var resources = CreateTestResources();
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
+
+        // Act
+        var result = await handler.ExecuteInteractiveAsync();
+
+        // Assert
+        await Assert.That(result).IsEqualTo(0);
+        await Assert.That(savedResources).IsNotNull();
+        await Assert.That(savedResources!.Resources["postgres"].Mode).IsEqualTo(Mode.Project);
+        await Assert.That(savedResources!.Resources["my-service"].Mode).IsEqualTo(Mode.Container);
+    }
+
+    [Test]
+    public async Task Execute_Interactive_DoubleToggleRevertsChange()
+    {
+        // Arrange
+        var console = new TestConsole();
+        console.Interactive();
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle postgres (Container -> Project)
+        console.Input.PushKey(ConsoleKey.Spacebar); // Toggle postgres again (Project -> Container)
+        console.Input.PushKey(ConsoleKey.Enter);    // Confirm
+
+        var writer = Substitute.For<ISharedResourcesWriter>();
+        var resources = CreateTestResources();
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(resources);
+        var handler = new ModesHandler(console, writer, globalReader);
+
+        // Act
+        var result = await handler.ExecuteInteractiveAsync();
+
+        // Assert — double toggle = no net change
+        await Assert.That(result).IsEqualTo(0);
+        await writer.DidNotReceive().SaveGlobalAsync(Arg.Any<GlobalSharedResources>(), Arg.Any<CancellationToken>());
+        await Assert.That(console.Output).Contains("No changes made");
     }
 
     [Test]
