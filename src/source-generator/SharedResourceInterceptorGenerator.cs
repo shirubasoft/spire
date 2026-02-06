@@ -103,26 +103,29 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
                 if (location is null)
                     return default;
 
-                // Try to resolve the method symbol from the semantic model
+                // Resolve the method symbol from the semantic model
                 var symbolInfo = semanticModel.GetSymbolInfo(invocation, ct);
                 var methodSymbol = symbolInfo.Symbol as IMethodSymbol
                     ?? symbolInfo.CandidateSymbols.OfType<IMethodSymbol>().FirstOrDefault();
 
-                // If we can't resolve the symbol, try to find it in Aspire.Hosting
+                // If the semantic model can't resolve (e.g., generated types not yet visible),
+                // search Aspire.Hosting assemblies for a compatible extension method.
                 if (methodSymbol is null)
-                {
                     methodSymbol = ResolveAspireMethod(compilation, methodName, invocation);
-                }
 
                 if (methodSymbol is null)
                     return default;
+
+                // Extract forwarded arguments from the call site
+                var forwardedArgs = ExtractForwardedArgs(invocation, methodSymbol);
 
                 return new InterceptorCandidate(
                     methodName,
                     location.Version,
                     location.Data,
                     location.GetDisplayLocation(),
-                    GetMethodSignature(methodSymbol));
+                    GetMethodSignature(methodSymbol),
+                    forwardedArgs);
             })
             .Where(static c => c is not null)
             .Collect();
@@ -147,6 +150,41 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
         {
             Expression: MemberAccessExpressionSyntax
         };
+    }
+
+    /// <summary>
+    /// Extracts the forwarded argument list from the call site, mapping each argument to its parameter name.
+    /// Only the arguments explicitly provided by the caller are forwarded.
+    /// </summary>
+    private static string ExtractForwardedArgs(InvocationExpressionSyntax invocation, IMethodSymbol methodSymbol)
+    {
+        var args = invocation.ArgumentList.Arguments;
+        if (args.Count == 0)
+            return "";
+
+        var parts = new List<string>();
+        for (var i = 0; i < args.Count; i++)
+        {
+            var arg = args[i];
+            string paramName;
+
+            if (arg.NameColon is not null)
+                paramName = arg.NameColon.Name.Identifier.Text;
+            else
+            {
+                // For reduced extension methods, 'this' is already excluded from Parameters.
+                var paramOffset = methodSymbol.ReducedFrom is not null ? 0 : (methodSymbol.IsExtensionMethod ? 1 : 0);
+                var paramIndex = i + paramOffset;
+                if (paramIndex < methodSymbol.Parameters.Length)
+                    paramName = methodSymbol.Parameters[paramIndex].Name;
+                else
+                    continue;
+            }
+
+            parts.Add($"{paramName}: {paramName}");
+        }
+
+        return string.Join(", ", parts);
     }
 
     /// <summary>
@@ -264,38 +302,49 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Searches Aspire.Hosting referenced assemblies for a matching extension method.
+    /// Searches Aspire.Hosting referenced assemblies for a compatible extension method.
+    /// Uses argument names and positions from the call site for correct overload matching.
     /// </summary>
     private static IMethodSymbol ResolveAspireMethod(
         Compilation compilation,
         string methodName,
         InvocationExpressionSyntax invocation)
     {
-        var argCount = invocation.ArgumentList.Arguments.Count;
+        var args = invocation.ArgumentList.Arguments;
 
+        IMethodSymbol bestMatch = null;
         foreach (var reference in compilation.References)
         {
             var symbol = compilation.GetAssemblyOrModuleSymbol(reference);
             if (symbol is not IAssemblySymbol assembly)
                 continue;
 
-            // Only search Aspire.Hosting assemblies
             if (!assembly.Name.StartsWith("Aspire.Hosting"))
                 continue;
 
-            var match = FindExtensionMethod(assembly.GlobalNamespace, methodName, argCount);
+            var match = FindCompatibleExtensionMethod(assembly.GlobalNamespace, methodName, args);
             if (match is not null)
-                return match;
+            {
+                // Prefer the overload with the most parameters (fullest signature)
+                if (bestMatch is null || match.Parameters.Length > bestMatch.Parameters.Length)
+                    bestMatch = match;
+            }
         }
 
-        return null;
+        return bestMatch;
     }
 
     /// <summary>
-    /// Recursively searches a namespace for a public static extension method with the given name.
+    /// Recursively searches a namespace for a public static extension method that is
+    /// compatible with the provided call site arguments.
     /// </summary>
-    private static IMethodSymbol FindExtensionMethod(INamespaceSymbol ns, string methodName, int argCount)
+    private static IMethodSymbol FindCompatibleExtensionMethod(
+        INamespaceSymbol ns,
+        string methodName,
+        SeparatedSyntaxList<ArgumentSyntax> args)
     {
+        IMethodSymbol bestMatch = null;
+
         foreach (var type in ns.GetTypeMembers())
         {
             if (!type.IsStatic)
@@ -303,28 +352,66 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
 
             foreach (var member in type.GetMembers(methodName))
             {
-                if (member is IMethodSymbol method
-                    && method.IsStatic
-                    && method.IsExtensionMethod
-                    // +1 for the 'this' parameter
-                    && method.Parameters.Length == argCount + 1)
-                {
-                    // Check if the first parameter accepts IResourceBuilder<T>
-                    var firstParam = method.Parameters[0];
-                    if (IsResourceBuilderType(firstParam.Type))
-                        return method;
-                }
+                if (member is not IMethodSymbol method
+                    || !method.IsStatic
+                    || !method.IsExtensionMethod
+                    || !IsResourceBuilderType(method.Parameters[0].Type))
+                    continue;
+
+                if (!IsCompatibleWithCallSite(method, args))
+                    continue;
+
+                if (bestMatch is null || method.Parameters.Length > bestMatch.Parameters.Length)
+                    bestMatch = method;
             }
         }
 
         foreach (var childNs in ns.GetNamespaceMembers())
         {
-            var match = FindExtensionMethod(childNs, methodName, argCount);
-            if (match is not null)
-                return match;
+            var match = FindCompatibleExtensionMethod(childNs, methodName, args);
+            if (match is not null && (bestMatch is null || match.Parameters.Length > bestMatch.Parameters.Length))
+                bestMatch = match;
         }
 
-        return null;
+        return bestMatch;
+    }
+
+    /// <summary>
+    /// Checks if an extension method is compatible with the provided call site arguments.
+    /// Named arguments must match parameter names; positional arguments must fit within the parameter list.
+    /// </summary>
+    private static bool IsCompatibleWithCallSite(IMethodSymbol method, SeparatedSyntaxList<ArgumentSyntax> args)
+    {
+        // Skip the 'this' parameter
+        var parameters = method.Parameters;
+        var positionalCount = 0;
+
+        foreach (var arg in args)
+        {
+            if (arg.NameColon is not null)
+            {
+                var name = arg.NameColon.Name.Identifier.Text;
+                var found = false;
+                for (var i = 1; i < parameters.Length; i++)
+                {
+                    if (parameters[i].Name == name)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found)
+                    return false;
+            }
+            else
+            {
+                positionalCount++;
+            }
+        }
+
+        // Method must have enough non-this parameters for positional args
+        return parameters.Length - 1 >= positionalCount;
     }
 
     /// <summary>
@@ -348,8 +435,10 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
     {
         var parameters = new List<ParameterInfo>();
 
-        // Skip the first parameter (this/extension parameter)
-        for (var i = 1; i < method.Parameters.Length; i++)
+        // For reduced extension methods, the 'this' parameter is already excluded from Parameters.
+        // Only skip param[0] for non-reduced extension methods where 'this' is still present.
+        var startIndex = method.ReducedFrom is not null ? 0 : (method.IsExtensionMethod ? 1 : 0);
+        for (var i = startIndex; i < method.Parameters.Length; i++)
         {
             var param = method.Parameters[i];
             parameters.Add(new ParameterInfo(
@@ -410,9 +499,9 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
     /// </summary>
     private static string GenerateInterceptorSource(ImmutableArray<InterceptorCandidate> candidates)
     {
-        // Group candidates by method name + signature
+        // Group candidates by method name + forwarded args (same method called with same arg pattern shares one interceptor)
         var groups = candidates
-            .GroupBy(c => c.MethodName)
+            .GroupBy(c => (c.MethodName, c.ForwardedArgs))
             .ToList();
 
         var sb = new StringBuilder();
@@ -440,19 +529,41 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
         sb.AppendLine("    file static class SharedResourceInterceptors");
         sb.AppendLine("    {");
 
+        // Count how many groups share each method name (for disambiguation)
+        var nameCounts = new Dictionary<string, int>();
+        foreach (var group in groups)
+        {
+            var name = group.Key.MethodName;
+            nameCounts[name] = nameCounts.TryGetValue(name, out var c) ? c + 1 : 1;
+        }
+
+        var nameCounters = new Dictionary<string, int>();
         foreach (var group in groups)
         {
             var representative = group.First();
             var sig = representative.Signature;
 
-            // Emit [InterceptsLocation] attributes for all call sites
+            // Disambiguate method name when multiple groups share the same name
+            string interceptorMethodName;
+            if (nameCounts[sig.MethodName] > 1)
+            {
+                nameCounters.TryGetValue(sig.MethodName, out var counter);
+                interceptorMethodName = $"{sig.MethodName}_{counter}";
+                nameCounters[sig.MethodName] = counter + 1;
+            }
+            else
+            {
+                interceptorMethodName = sig.MethodName;
+            }
+
+            // Emit [InterceptsLocation] attributes for all call sites in this group
             foreach (var candidate in group)
             {
                 sb.AppendLine($"        [global::System.Runtime.CompilerServices.InterceptsLocation({candidate.LocationVersion}, \"{candidate.LocationData}\")] // {candidate.DisplayLocation}");
             }
 
             // Generate the interceptor method
-            GenerateInterceptorMethod(sb, sig);
+            GenerateInterceptorMethod(sb, sig, interceptorMethodName, representative.ForwardedArgs);
             sb.AppendLine();
         }
 
@@ -462,14 +573,14 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    private static void GenerateInterceptorMethod(StringBuilder sb, MethodSignature sig)
+    private static void GenerateInterceptorMethod(StringBuilder sb, MethodSignature sig, string interceptorMethodName, string forwardedArgs)
     {
         var typeParam = sig.HasGenericResourceConstraint ? "<T>" : "";
         var constraint = sig.HasGenericResourceConstraint
-            ? $" where T : global::Aspire.Hosting.SharedResource"
+            ? " where T : global::Aspire.Hosting.SharedResource"
             : "";
 
-        // Build parameter list
+        // Build parameter list (full signature to match the intercepted method)
         var paramList = new StringBuilder();
         paramList.Append("this global::Aspire.Hosting.ApplicationModel.IResourceBuilder<");
         if (sig.HasGenericResourceConstraint)
@@ -495,30 +606,17 @@ public sealed class SharedResourceInterceptorGenerator : IIncrementalGenerator
             }
         }
 
-        // Build argument list for forwarding
-        var argList = new StringBuilder();
-        foreach (var param in sig.Parameters)
-        {
-            if (argList.Length > 0)
-                argList.Append(", ");
-            if (param.RefKind == RefKind.Ref)
-                argList.Append("ref ");
-            else if (param.RefKind == RefKind.Out)
-                argList.Append("out ");
-            argList.Append(param.Name);
-        }
-
         // Determine return type
         var returnType = $"global::Aspire.Hosting.ApplicationModel.IResourceBuilder<{(sig.HasGenericResourceConstraint ? "T" : "global::Aspire.Hosting.SharedResource")}>";
 
-        sb.AppendLine($"        public static {returnType} {sig.MethodName}{typeParam}({paramList}){constraint}");
+        sb.AppendLine($"        public static {returnType} {interceptorMethodName}{typeParam}({paramList}){constraint}");
         sb.AppendLine("        {");
         sb.AppendLine("            var resource = builder.Resource;");
         sb.AppendLine("            var inner = resource.InnerBuilder;");
-        sb.AppendLine($"            if (resource.Mode == global::Aspire.Hosting.ResourceMode.Container)");
-        sb.AppendLine($"                ((global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.ContainerResource>)inner).{sig.MethodName}({argList});");
+        sb.AppendLine("            if (resource.Mode == global::Aspire.Hosting.ResourceMode.Container)");
+        sb.AppendLine($"                ((global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.ContainerResource>)inner).{sig.MethodName}({forwardedArgs});");
         sb.AppendLine("            else");
-        sb.AppendLine($"                ((global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.ProjectResource>)inner).{sig.MethodName}({argList});");
+        sb.AppendLine($"                ((global::Aspire.Hosting.ApplicationModel.IResourceBuilder<global::Aspire.Hosting.ApplicationModel.ProjectResource>)inner).{sig.MethodName}({forwardedArgs});");
         sb.AppendLine("            return builder;");
         sb.AppendLine("        }");
     }
@@ -531,13 +629,15 @@ internal sealed class InterceptorCandidate
         int locationVersion,
         string locationData,
         string displayLocation,
-        MethodSignature signature)
+        MethodSignature signature,
+        string forwardedArgs)
     {
         MethodName = methodName;
         LocationVersion = locationVersion;
         LocationData = locationData;
         DisplayLocation = displayLocation;
         Signature = signature;
+        ForwardedArgs = forwardedArgs;
     }
 
     public string MethodName { get; }
@@ -545,6 +645,7 @@ internal sealed class InterceptorCandidate
     public string LocationData { get; }
     public string DisplayLocation { get; }
     public MethodSignature Signature { get; }
+    public string ForwardedArgs { get; }
 }
 
 internal sealed class MethodSignature
