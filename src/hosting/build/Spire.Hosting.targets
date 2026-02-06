@@ -1,5 +1,21 @@
 <Project>
 
+  <!-- Auto-install/update the spire CLI tool when opted in -->
+  <Target Name="_EnsureSpireCliInstalled"
+          BeforeTargets="_CheckSpireCliAvailability"
+          Condition="'$(SpireAutoInstallCli)' == 'true' AND '$(SkipSharedResourceResolution)' != 'true'">
+    <Message Text="Spire: Ensuring the 'spire' CLI tool is installed/up-to-date..."
+             Importance="high" />
+    <Exec Command="dotnet tool install -g spire.cli"
+          IgnoreExitCode="true"
+          StandardOutputImportance="low"
+          StandardErrorImportance="low">
+      <Output TaskParameter="ExitCode" PropertyName="_SpireToolInstallExitCode" />
+    </Exec>
+    <Warning Condition="'$(_SpireToolInstallExitCode)' != '0'"
+             Text="Spire: Auto-install of 'spire' CLI tool failed (exit code $(_SpireToolInstallExitCode)). The build will continue, but may fail if the tool is not available." />
+  </Target>
+
   <!-- Check that the spire CLI is available -->
   <Target Name="_CheckSpireCliAvailability"
           BeforeTargets="_ImportSharedResources"
