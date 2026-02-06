@@ -31,7 +31,7 @@
   <Target Name="_ImportSharedResources"
           BeforeTargets="_ForwardSharedResourcesToGenerator"
           Condition="'$(SkipSharedResourceResolution)' != 'true'">
-    <Exec Command="spire resource import" />
+    <Exec Command="spire resource import --yes" />
   </Target>
 
   <!-- Query the CLI for resolved resources and forward to the source generator -->

@@ -31,6 +31,8 @@ public sealed class GitService : IGitService
         await CliWrap.Cli.Wrap(cli)
             .WithArguments(arguments)
             .WithValidation(CommandResultValidation.ZeroExitCode)
+            .WithStandardOutputPipe(PipeTarget.ToStream(Console.OpenStandardOutput()))
+            .WithStandardErrorPipe(PipeTarget.ToStream(Console.OpenStandardError()))
             .ExecuteAsync(cancellationToken);
 
         return await GetRepositoryAsync(path, cancellationToken);
