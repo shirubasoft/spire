@@ -19,12 +19,12 @@ public sealed class TestGitService : IGitService
     }
 
     /// <inheritdoc/>
-    public Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, CancellationToken cancellationToken)
+    public Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, string? branch = null, CancellationToken cancellationToken = default)
     {
         var repo = new GitRepository
         {
             RootPath = path,
-            CurrentBranch = "main",
+            CurrentBranch = branch ?? "main",
             LatestCommitHash = "abc123",
             IsDirty = false
         };

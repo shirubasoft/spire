@@ -165,7 +165,7 @@ public sealed class ResourceImportHandler
         CancellationToken cancellationToken)
     {
         _console.WriteLine();
-        _console.MarkupLine($"[bold]Cloning external repository:[/] {external.Url}...");
+        _console.MarkupLine($"[bold]Cloning external repository:[/] {external.Url} (branch: {external.Branch})...");
 
         // Determine clone location
         var repoName = GetRepoNameFromUrl(external.Url);
@@ -208,7 +208,7 @@ public sealed class ResourceImportHandler
             }
 
             _console.MarkupLine($"  Cloning to {clonePath}");
-            await _gitService.CloneRepositoryAsync(external.Url, clonePath, cancellationToken);
+            await _gitService.CloneRepositoryAsync(external.Url, clonePath, external.Branch, cancellationToken);
         }
 
         // Recursively import from cloned repo

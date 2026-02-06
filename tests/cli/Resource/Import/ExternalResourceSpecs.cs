@@ -62,6 +62,7 @@ public class ExternalResourceSpecs
         await gitService.Received(1).CloneRepositoryAsync(
             "https://github.com/org/shared-repo",
             "/test/shared-repo",
+            "main",
             Arg.Any<CancellationToken>());
     }
 
@@ -116,6 +117,61 @@ public class ExternalResourceSpecs
         await gitService.DidNotReceive().CloneRepositoryAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Test]
+    public async Task Import_WithExternalResourceBranch_ClonesBranch()
+    {
+        // Arrange
+        var console = new TestConsole();
+        var gitService = Substitute.For<IGitService>();
+        var repositoryReader = Substitute.For<IRepositorySharedResourcesReader>();
+        var writer = Substitute.For<ISharedResourcesWriter>();
+
+        gitService.GetRepositoryRootAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns("/test/repo");
+
+        gitService.GetParentDirectory("/test/repo")
+            .Returns("/test");
+
+        gitService.IsRepositoryCloned("/test/shared-repo")
+            .Returns(false);
+
+        repositoryReader.SettingsFileExists("/test/repo")
+            .Returns(true);
+
+        var mainResources = new RepositorySharedResources
+        {
+            Resources = [],
+            ExternalResources =
+            [
+                new ExternalResource { Url = "https://github.com/org/shared-repo", Branch = "develop" }
+            ]
+        };
+
+        repositoryReader.ReadAsync("/test/repo", Arg.Any<CancellationToken>())
+            .Returns(mainResources);
+
+        repositoryReader.ReadAsync("/test/shared-repo", Arg.Any<CancellationToken>())
+            .Returns(new RepositorySharedResources { Resources = [] });
+
+        var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
+        globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
+            .Returns(GlobalSharedResources.Empty);
+
+        var handler = new ResourceImportHandler(console, gitService, repositoryReader, writer, globalReader);
+
+        // Act
+        var result = await handler.ExecuteAsync(yes: true, force: false);
+
+        // Assert
+        await Assert.That(result).IsEqualTo(0);
+        await gitService.Received(1).CloneRepositoryAsync(
+            "https://github.com/org/shared-repo",
+            "/test/shared-repo",
+            "develop",
             Arg.Any<CancellationToken>());
     }
 

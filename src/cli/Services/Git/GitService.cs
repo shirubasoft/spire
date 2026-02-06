@@ -20,13 +20,15 @@ public sealed class GitService : IGitService
     }
 
     /// <inheritdoc />
-    public async Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, CancellationToken cancellationToken)
+    public async Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, string? branch = null, CancellationToken cancellationToken = default)
     {
         var cli = await _cliResolver.ResolveAsync(cancellationToken);
 
+        var branchArg = !string.IsNullOrEmpty(branch) ? $" --branch {branch}" : "";
+
         var arguments = cli == "gh"
-            ? $"repo clone {repositoryUrl} {path}"
-            : $"clone {repositoryUrl} {path}";
+            ? $"repo clone {repositoryUrl} {path}" + (!string.IsNullOrEmpty(branch) ? $" -- --branch {branch}" : "")
+            : $"clone{branchArg} {repositoryUrl} {path}";
 
         await CliWrap.Cli.Wrap(cli)
             .WithArguments(arguments)
