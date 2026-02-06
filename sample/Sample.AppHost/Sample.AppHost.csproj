@@ -1,6 +1,6 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.1.0">
 
-  <Import Project="../../src/hosting/build/Spire.Hosting.props" />
+  <Import Project="../../src/hosting/build/Shirubasoft.Spire.Hosting.props" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -25,6 +25,6 @@
     <ProjectReference Include="..\Sample.Web\Sample.Web.csproj" />
   </ItemGroup>
 
-  <Import Project="../../src/hosting/build/Spire.Hosting.targets" />
+  <Import Project="../../src/hosting/build/Shirubasoft.Spire.Hosting.targets" />
 
 </Project>

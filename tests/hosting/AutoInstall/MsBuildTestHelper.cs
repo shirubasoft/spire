@@ -14,8 +14,8 @@ internal static class MsBuildTestHelper
         Dictionary<string, string>? properties = null,
         string target = "_EnsureSpireCliInstalled")
     {
-        var propsPath = Path.Combine(HostingBuildDir, "Spire.Hosting.props");
-        var targetsPath = Path.Combine(HostingBuildDir, "Spire.Hosting.targets");
+        var propsPath = Path.Combine(HostingBuildDir, "Shirubasoft.Spire.Hosting.props");
+        var targetsPath = Path.Combine(HostingBuildDir, "Shirubasoft.Spire.Hosting.targets");
 
         var csproj = $"""
             <Project Sdk="Microsoft.NET.Sdk">

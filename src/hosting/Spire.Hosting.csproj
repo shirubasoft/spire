@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <PackageId>Shirubasoft.Spire.Hosting</PackageId>
     <Description>Runtime types and MSBuild targets for Spire shared resource references.</Description>
   </PropertyGroup>
 
