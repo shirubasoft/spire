@@ -10,8 +10,9 @@ public interface IGitService
     /// </summary>
     /// <param name="repositoryUrl">The URL of the Git repository to clone.</param>
     /// <param name="path">The local path where the repository should be cloned.</param>
+    /// <param name="branch">The branch to clone. When null, the repository default branch is used.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
-    Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, CancellationToken cancellationToken);
+    Task<GitRepository> CloneRepositoryAsync(string repositoryUrl, string path, string? branch = null, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves information about a Git repository.
