@@ -270,12 +270,27 @@ public sealed class BuildHandler
 
         _console.MarkupLine("  [green]Build completed.[/]");
 
-        // Apply all tags to the image (dotnet publish creates the image without registry prefix)
-        var sourceImage = $"{containerSettings.ImageName}:{tags.LatestTag}";
+        // Find the built image by trying multiple source candidates
+        var sourceImage = await FindSourceImageAsync(
+            containerSettings.ImageRegistry,
+            containerSettings.ImageName,
+            tags,
+            cancellationToken);
+
+        if (sourceImage is null)
+        {
+            _console.MarkupLine("  [red]Error: Could not find built image[/]");
+            return new BuildResult.ErrorResult("Could not find built image");
+        }
+
+        _console.MarkupLine($"  Found source image: {sourceImage.EscapeMarkup()}");
+
+        // Tag with full registry/imageName prefix
+        var targetBaseImage = $"{containerSettings.ImageRegistry}/{containerSettings.ImageName}";
 
         try
         {
-            await _containerImageService.TagImageAsync(sourceImage, [tags.CommitTag, tags.BranchTag], cancellationToken);
+            await _containerImageService.TagImageAsync(sourceImage, targetBaseImage, tags.All, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -283,10 +298,41 @@ public sealed class BuildHandler
             return new BuildResult.ErrorResult($"Tagging failed: {ex.Message}");
         }
 
-        _console.MarkupLine($"  [green]Tags applied: {string.Join(", ", tags.All)}[/]");
+        _console.MarkupLine($"  [green]Tags applied: {string.Join(", ", tags.All.Select(t => $"{targetBaseImage}:{t}"))}[/]");
         _console.MarkupLine($"  [green]Updated ContainerMode.ImageTag: {tags.BranchTag.EscapeMarkup()}[/]");
 
         return new BuildResult.BuiltResult();
+    }
+
+    private async Task<string?> FindSourceImageAsync(
+        string registry,
+        string imageName,
+        ImageTags tags,
+        CancellationToken cancellationToken)
+    {
+        // Try to find the built image in order of likelihood:
+        // 1. Without registry (dotnet publish typically creates images without registry prefix)
+        // 2. With registry (docker build -t registry/name:tag)
+        // For each base, try latest, commit sha, and sanitized branch name tags
+        (string Registry, string Name, string Tag)[] candidates =
+        [
+            ("", imageName, tags.LatestTag),
+            ("", imageName, tags.CommitTag),
+            ("", imageName, tags.BranchTag),
+            (registry, imageName, tags.LatestTag),
+            (registry, imageName, tags.CommitTag),
+            (registry, imageName, tags.BranchTag),
+        ];
+
+        foreach (var (reg, name, tag) in candidates)
+        {
+            if (await _containerImageService.TagExistsAsync(reg, name, tag, cancellationToken))
+            {
+                return string.IsNullOrEmpty(reg) ? $"{name}:{tag}" : $"{reg}/{name}:{tag}";
+            }
+        }
+
+        return null;
     }
 
     private abstract record BuildResult

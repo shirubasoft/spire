@@ -89,17 +89,13 @@ public sealed class ContainerImageService : IContainerImageService
     }
 
     /// <inheritdoc />
-    public async Task TagImageAsync(string sourceImage, IEnumerable<string> tags, CancellationToken cancellationToken)
+    public async Task TagImageAsync(string sourceImage, string targetBaseImage, IEnumerable<string> tags, CancellationToken cancellationToken)
     {
         var runtime = await _runtimeResolver.ResolveAsync(cancellationToken);
 
-        // Extract registry and image name from source image
-        var colonIndex = sourceImage.LastIndexOf(':');
-        var baseImage = colonIndex > 0 ? sourceImage[..colonIndex] : sourceImage;
-
         foreach (var tag in tags)
         {
-            var targetImage = $"{baseImage}:{tag}";
+            var targetImage = $"{targetBaseImage}:{tag}";
             var result = await _commandRunner.RunAsync(
                 runtime,
                 $"tag {sourceImage} {targetImage}",

@@ -64,6 +64,10 @@ public class ValidResourceBuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-service", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -352,6 +356,10 @@ public class ForceRebuildSpecs
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(true);
 
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-service", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
+
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
             .Returns(resources);
@@ -426,6 +434,10 @@ public class ExistingBranchTagSpecs
         // Commit tag does NOT exist (branch tag existence doesn't matter)
         containerService.TagExistsAsync("docker.io", "my-service", "abc1234", Arg.Any<CancellationToken>())
             .Returns(false);
+
+        // Source image exists after build (without registry, latest tag)
+        containerService.TagExistsAsync("", "my-service", "latest", Arg.Any<CancellationToken>())
+            .Returns(true);
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
@@ -588,7 +600,7 @@ public class MultipleResourceBuildSpecs
             });
 
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(false);
+            .Returns(callInfo => string.IsNullOrEmpty(callInfo.ArgAt<string>(0)));
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
@@ -681,7 +693,7 @@ public class BuildAllFromRepoSpecs
             });
 
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(false);
+            .Returns(callInfo => string.IsNullOrEmpty(callInfo.ArgAt<string>(0)));
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
@@ -769,7 +781,7 @@ public class BuildAllFromGlobalSpecs
             });
 
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(false);
+            .Returns(callInfo => string.IsNullOrEmpty(callInfo.ArgAt<string>(0)));
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
@@ -892,7 +904,7 @@ public class BuildAllSkipsNonBuildableSpecs
             });
 
         containerService.TagExistsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(false);
+            .Returns(callInfo => string.IsNullOrEmpty(callInfo.ArgAt<string>(0)));
 
         var globalReader = Substitute.For<IGlobalSharedResourcesReader>();
         globalReader.GetSharedResourcesAsync(Arg.Any<CancellationToken>())
