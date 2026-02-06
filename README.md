@@ -89,7 +89,13 @@ All resource commands operate on **both** `.aspire/settings.json` and the global
 
 ## Installation
 
-Install the Spire CLI as a global .NET tool:
+Add the `Shirubasoft.Spire.Hosting` package to your AppHost project. This provides the MSBuild targets, source generator, and runtime types needed to use shared resources:
+
+```bash
+dotnet add package Shirubasoft.Spire.Hosting
+```
+
+Then install the Spire CLI as a global .NET tool:
 
 ```bash
 dotnet tool install -g spire.cli
