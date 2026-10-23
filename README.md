@@ -4,8 +4,9 @@
 > This repository is archived, and the Spire packages and CLI receive no further releases. Its
 > successor is the [Multirepo extension](https://github.com/shirubasoft/aspire-extensions/tree/main/extensions/Shirubasoft.Aspire.Extensions.Multirepo)
 > in shirubasoft/aspire-extensions, which shares Aspire resource graphs across repositories through
-> typed module contracts. Multirepo is not a drop-in replacement; see its README to move a
-> shared resource to a module.
+> typed module contracts. Multirepo is not a drop-in replacement. See
+> [Define and import modules](https://github.com/shirubasoft/aspire-extensions/blob/main/extensions/Shirubasoft.Aspire.Extensions.Multirepo/docs/modules.md) to author a module contract and configure repository
+> initialization and project or container modes.
 
 Share .NET Aspire services across multiple repositories. A service runs as a **Project** in its home repo and as a **Container** everywhere else — with a single declaration.
 
